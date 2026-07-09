@@ -107,9 +107,9 @@
 
 > 단계별 계획·완료 기준은 [product-requirements.md — Phase 2 연동 & 통합](product-requirements.md#phase-2--연동--통합--전원-일부-병렬) 및 [Phase 4 마무리 & 데모](product-requirements.md#phase-4--마무리--데모-전원) 참고.
 
-- [ ] FE ↔ BE 통합 테스트
-- [ ] 주요 시나리오 E2E 확인 (GPS 추천 / 지정 위치 추천 / 시간대별)
-- [ ] 예외 케이스 점검 (위치 실패, 결과 없음, API 오류)
+- [x] FE ↔ BE 통합 테스트 — `VITE_API_BASE_URL` 연결, 로컬 E2E 확인 (`89ee1d6`)
+- [ ] 주요 시나리오 E2E 확인 (GPS 추천 / 지정 위치 추천 / 시간대별) *(지정 위치 추천 확인, GPS 경로 미확인)*
+- [ ] 예외 케이스 점검 (위치 실패, 결과 없음, API 오류) *(`NO_RESULT`(404)→빈 결과, `INVALID_INPUT`(400) 처리 확인)*
 - [ ] 성능 점검 (응답 속도, 지도 렌더링)
 - [ ] 배포 및 데모 준비
 
