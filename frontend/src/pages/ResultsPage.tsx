@@ -16,6 +16,13 @@ export default function ResultsPage() {
   const [sortKey, setSortKey] = useState<SortKey>('travelMinutes');
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [detailPlace, setDetailPlace] = useState<Place | null>(null);
+  // 선택된 장소의 실제(또는 대체) 경로 조회 결과. 지도에서 경로를 그리면서 갱신된다.
+  const [routeInfo, setRouteInfo] = useState<{
+    placeId: string;
+    durationMinutes: number;
+    distanceKm: number;
+    isActualRoute: boolean;
+  } | null>(null);
 
   // 결과에 존재하는 카테고리 목록 (중복 제거)
   const categories = useMemo(
@@ -69,7 +76,20 @@ export default function ResultsPage() {
               places={visiblePlaces}
               selectedId={selectedId}
               onSelect={setSelectedId}
+              mode={mode}
+              onRouteChange={(placeId, route) =>
+                setRouteInfo(
+                  route ? { placeId, ...route } : null,
+                )
+              }
             />
+            {routeInfo && !routeInfo.isActualRoute && (
+              <p className="results__route-note">
+                {mode === 'transit'
+                  ? '대중교통 경로는 지도에서 제공되지 않아 직선으로 표시돼요.'
+                  : '실제 경로를 불러오지 못해 직선으로 표시돼요.'}
+              </p>
+            )}
           </div>
 
           <div className="results__list-panel">
@@ -95,6 +115,11 @@ export default function ResultsPage() {
                     onHover={setSelectedId}
                     onSelect={setSelectedId}
                     onOpenDetail={setDetailPlace}
+                    liveRoute={
+                      routeInfo?.placeId === place.id
+                        ? routeInfo
+                        : undefined
+                    }
                   />
                 ))}
               </ul>

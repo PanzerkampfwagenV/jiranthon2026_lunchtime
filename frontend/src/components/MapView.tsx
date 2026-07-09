@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
-import type { LatLng, Place } from '../types';
+import type { LatLng, Place, TravelMode } from '../types';
 import { useKakaoLoader } from '../hooks/useKakaoLoader';
+import { fetchRoute } from '../api/route';
 
 interface MapViewProps {
   /** 출발지(사용자) 좌표 */
@@ -11,13 +12,20 @@ interface MapViewProps {
   selectedId: string | null;
   /** 마커 클릭 시 호출 */
   onSelect: (id: string) => void;
+  /** 경로 계산에 사용할 이동 수단 */
+  mode: TravelMode;
+  /** 선택된 장소의 실제 경로 조회 결과가 바뀔 때 호출 (없으면 미사용) */
+  onRouteChange?: (
+    placeId: string,
+    route: { durationMinutes: number; distanceKm: number; isActualRoute: boolean } | null,
+  ) => void;
 }
 
 /**
  * Kakao Map 시각화 컴포넌트.
  * - 사용자 위치 + 추천 장소 마커 표시
  * - 마커 클릭 시 InfoWindow + 상위로 선택 알림
- * - selectedId 변경 시 해당 마커 강조 및 지도 중심 이동
+ * - selectedId 변경 시 해당 마커 강조, 지도 중심 이동, 출발지↔선택 장소 경로(Polyline) 표시
  * SDK 키가 없으면 안내 플레이스홀더를 렌더링한다.
  */
 export default function MapView({
@@ -25,15 +33,20 @@ export default function MapView({
   places,
   selectedId,
   onSelect,
+  mode,
+  onRouteChange,
 }: MapViewProps) {
   const status = useKakaoLoader();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<kakao.maps.Map | null>(null);
   const markersRef = useRef<Map<string, kakao.maps.Marker>>(new Map());
   const infoWindowRef = useRef<kakao.maps.InfoWindow | null>(null);
-  // onSelect가 매 렌더마다 바뀌어도 리스너를 다시 달지 않도록 ref로 보관
+  const polylineRef = useRef<kakao.maps.Polyline | null>(null);
+  // onSelect/onRouteChange가 매 렌더마다 바뀌어도 effect를 다시 걸지 않도록 ref로 보관
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  const onRouteChangeRef = useRef(onRouteChange);
+  onRouteChangeRef.current = onRouteChange;
 
   // 지도 초기화 + 마커 렌더링
   useEffect(() => {
@@ -88,19 +101,26 @@ export default function MapView({
       markers.forEach((m) => m.setMap(null));
       markers.clear();
       infoWindow.close();
+      polylineRef.current?.setMap(null);
+      polylineRef.current = null;
       mapRef.current = null;
     };
   }, [status, origin.lat, origin.lng, places]);
 
-  // 선택 장소 변경 시: InfoWindow 열고 중심 이동
+  // 선택 장소 변경 시: InfoWindow 열고 중심 이동, 출발지→장소 경로 표시
   useEffect(() => {
     if (status !== 'ready') return;
     const map = mapRef.current;
     const infoWindow = infoWindowRef.current;
     if (!map || !infoWindow) return;
 
+    // 이전 경로선 제거
+    polylineRef.current?.setMap(null);
+    polylineRef.current = null;
+
     if (!selectedId) {
       infoWindow.close();
+      onRouteChangeRef.current?.('', null);
       return;
     }
 
@@ -115,7 +135,36 @@ export default function MapView({
     );
     infoWindow.open(map, marker);
     map.setCenter(marker.getPosition());
-  }, [selectedId, status, places]);
+
+    // 실제(또는 대체) 경로를 조회해 Polyline으로 표시한다.
+    let cancelled = false;
+    fetchRoute(origin, { lat: place.lat, lng: place.lng }, mode)
+      .then((route) => {
+        if (cancelled || !mapRef.current) return;
+        const path = route.path.map((p) => new window.kakao.maps.LatLng(p.lat, p.lng));
+        const polyline = new window.kakao.maps.Polyline({
+          path,
+          strokeWeight: 4,
+          strokeColor: route.isActualRoute ? '#2563eb' : '#94a3b8',
+          strokeOpacity: 0.85,
+          strokeStyle: route.isActualRoute ? 'solid' : 'shortdash',
+          map: mapRef.current,
+        });
+        polylineRef.current = polyline;
+        onRouteChangeRef.current?.(place.id, {
+          durationMinutes: route.durationMinutes,
+          distanceKm: route.distanceKm,
+          isActualRoute: route.isActualRoute,
+        });
+      })
+      .catch((err) => {
+        console.error('경로 조회 실패:', err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedId, status, places, origin, mode]);
 
   if (status === 'no-key') {
     return (

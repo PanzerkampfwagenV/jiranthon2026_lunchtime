@@ -80,6 +80,21 @@ declare namespace kakao.maps {
     ): void;
   }
 
+  interface PolylineOptions {
+    path: LatLng[];
+    strokeWeight?: number;
+    strokeColor?: string;
+    strokeOpacity?: number;
+    strokeStyle?: string;
+    map?: Map;
+  }
+
+  class Polyline {
+    constructor(options: PolylineOptions);
+    setMap(map: Map | null): void;
+    setPath(path: LatLng[]): void;
+  }
+
   function load(callback: () => void): void;
 
   // services 라이브러리 (장소 검색 등)
