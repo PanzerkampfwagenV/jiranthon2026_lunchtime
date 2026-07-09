@@ -116,6 +116,37 @@
   text-align: center;
 }
 
+.lucky-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.lucky-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.lucky-field__label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.lucky-field .preset-group {
+  margin-bottom: 0;
+}
+
+.lucky-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.lucky-actions .btn {
+  flex: 1;
+}
+
 .location-actions {
   display: flex;
   flex-direction: column;

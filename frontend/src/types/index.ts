@@ -17,6 +17,18 @@ export type MbtiType =
   | 'ESTP' | 'ESFP' | 'ENFP' | 'ENTP'
   | 'ESTJ' | 'ESFJ' | 'ENFJ' | 'ENTJ';
 
+/** 럭키데이(오늘의 운세) 입력 정보 (선택 옵션) */
+export interface LuckyDayInfo {
+  /** 생년월일 (YYYY-MM-DD) */
+  birthDate: string;
+  /** 태어난 시각 (HH:mm), 모를 경우 빈 문자열 */
+  birthTime: string;
+  /** 양력/음력 구분 */
+  calendar: 'solar' | 'lunar';
+  /** 성별 */
+  gender: 'male' | 'female';
+}
+
 /** 선택된 위치 정보 (좌표 + 표시용 라벨) */
 export interface SelectedLocation {
   coords: LatLng;

@@ -42,7 +42,7 @@ const THEME_ICONS: Record<ThemeMode, string> = {
   dark: '🌙',
 };
 
-type PanelKey = 'location' | 'time' | 'mode' | 'mbti';
+type PanelKey = 'location' | 'time' | 'mode' | 'mbti' | 'luckyDay';
 
 const MODE_LABELS: Record<TravelMode, string> = {
   walking: '도보',
@@ -66,10 +66,12 @@ export default function HomePage() {
     availableMinutes,
     mode,
     mbti,
+    luckyDay,
     setLocation,
     setAvailableMinutes,
     setMode,
     setMbti,
+    setLuckyDay,
     setPlaces,
   } = useSearch();
   const { loading: gpsLoading, requestLocation } = useGeolocation();
@@ -100,6 +102,16 @@ export default function HomePage() {
   });
   const [theme, setTheme] = useState<ThemeMode>(
     () => getStoredTheme() ?? APP_SETTINGS.theme,
+  );
+
+  // 럭키데이(오늘의 운세) 입력 폼 로컬 상태.
+  const [birthDate, setBirthDate] = useState(luckyDay?.birthDate ?? '1990-05-23');
+  const [birthTime, setBirthTime] = useState(luckyDay?.birthTime ?? '07:00');
+  const [calendar, setCalendar] = useState<'solar' | 'lunar'>(
+    luckyDay?.calendar ?? 'solar',
+  );
+  const [gender, setGender] = useState<'male' | 'female'>(
+    luckyDay?.gender ?? 'female',
   );
 
   const togglePanel = (key: PanelKey) => {
@@ -174,6 +186,22 @@ export default function HomePage() {
   // MBTI는 선택 옵션. 같은 값을 다시 누르면 선택 해제한다.
   const handleSelectMbti = (next: MbtiType) => {
     setMbti(mbti === next ? null : next);
+  };
+
+  // 럭키데이 정보 저장. 생년월일은 필수 입력.
+  const handleSaveLuckyDay = () => {
+    if (!birthDate) return;
+    setLuckyDay({ birthDate, birthTime, calendar, gender });
+    setActivePanel(null);
+  };
+
+  // 럭키데이 정보 초기화.
+  const handleClearLuckyDay = () => {
+    setLuckyDay(null);
+    setBirthDate('1990-05-23');
+    setBirthTime('07:00');
+    setCalendar('solar');
+    setGender('female');
   };
 
   const handleSubmit = async () => {
@@ -270,6 +298,16 @@ export default function HomePage() {
           aria-expanded={activePanel === 'mbti'}
         >
           #MBTI{mbti ? `·${mbti}` : ''}
+        </button>
+        <button
+          type="button"
+          className={`hashtag ${activePanel === 'luckyDay' ? 'hashtag--open' : ''} ${
+            luckyDay ? 'hashtag--set' : ''
+          }`}
+          onClick={() => togglePanel('luckyDay')}
+          aria-expanded={activePanel === 'luckyDay'}
+        >
+          #럭키데이{luckyDay ? `·${luckyDay.birthDate}` : ''}
         </button>
       </nav>
 
@@ -424,6 +462,101 @@ export default function HomePage() {
           </div>
           <p className="panel-hint">
             선택 사항이에요. 성향에 맞는 여행지를 곧 추천해 드릴게요.
+          </p>
+        </section>
+      )}
+
+      {activePanel === 'luckyDay' && (
+        <section className="card" aria-label="럭키데이 정보 입력">
+          <div className="lucky-form">
+            <label className="lucky-field">
+              <span className="lucky-field__label">생년월일</span>
+              <input
+                type="date"
+                className="input"
+                value={birthDate}
+                onChange={(e) => setBirthDate(e.target.value)}
+                aria-label="생년월일"
+              />
+            </label>
+
+            <label className="lucky-field">
+              <span className="lucky-field__label">태어난 시각 (선택)</span>
+              <input
+                type="time"
+                className="input"
+                value={birthTime}
+                onChange={(e) => setBirthTime(e.target.value)}
+                aria-label="태어난 시각"
+              />
+            </label>
+
+            <div className="lucky-field">
+              <span className="lucky-field__label">달력</span>
+              <div className="preset-group" role="group" aria-label="양력/음력">
+                <button
+                  type="button"
+                  className={`chip ${calendar === 'solar' ? 'chip--active' : ''}`}
+                  onClick={() => setCalendar('solar')}
+                  aria-pressed={calendar === 'solar'}
+                >
+                  양력
+                </button>
+                <button
+                  type="button"
+                  className={`chip ${calendar === 'lunar' ? 'chip--active' : ''}`}
+                  onClick={() => setCalendar('lunar')}
+                  aria-pressed={calendar === 'lunar'}
+                >
+                  음력
+                </button>
+              </div>
+            </div>
+
+            <div className="lucky-field">
+              <span className="lucky-field__label">성별</span>
+              <div className="preset-group" role="group" aria-label="성별">
+                <button
+                  type="button"
+                  className={`chip ${gender === 'female' ? 'chip--active' : ''}`}
+                  onClick={() => setGender('female')}
+                  aria-pressed={gender === 'female'}
+                >
+                  여성
+                </button>
+                <button
+                  type="button"
+                  className={`chip ${gender === 'male' ? 'chip--active' : ''}`}
+                  onClick={() => setGender('male')}
+                  aria-pressed={gender === 'male'}
+                >
+                  남성
+                </button>
+              </div>
+            </div>
+
+            <div className="lucky-actions">
+              <button
+                type="button"
+                className="btn btn--primary"
+                onClick={handleSaveLuckyDay}
+                disabled={!birthDate}
+              >
+                저장
+              </button>
+              {luckyDay && (
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={handleClearLuckyDay}
+                >
+                  초기화
+                </button>
+              )}
+            </div>
+          </div>
+          <p className="panel-hint">
+            선택 사항이에요. 오늘의 운세에 맞는 여행지를 곧 추천해 드릴게요.
           </p>
         </section>
       )}
