@@ -31,7 +31,7 @@ When writing Markdown documents, make full use of Mermaid diagrams so that human
 Record development progress under `docs/devlog/` after major work is completed and committed.
 
 - Add a devlog entry when a major task ends and its commit is done.
-- Filename format: `YYYY-MM-DD-HH-mm-<topic>.md`.
+- Filename format: `YYYY-MM-DD-HH-mm-<git-user-name>-<topic>.md` (use the value of `git config user.name` for the author).
 - Each entry should include:
   - 작업 요약 (Work summary)
   - 변경 사항 (Changes: key files/features)
