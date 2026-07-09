@@ -49,6 +49,52 @@
   gap: 0.5rem;
 }
 
+.suggestion-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.suggestion-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.55rem 0.65rem;
+  border: none;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.suggestion-item:hover,
+.suggestion-item:focus-visible {
+  background: var(--bg);
+}
+
+.suggestion-name {
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.suggestion-addr {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.suggestion-empty {
+  padding: 0.55rem 0.65rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+}
+
 .location-selected {
   margin: 0.85rem 0 0;
   font-size: 0.9rem;

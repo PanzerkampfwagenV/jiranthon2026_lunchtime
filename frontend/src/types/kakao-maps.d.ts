@@ -81,6 +81,60 @@ declare namespace kakao.maps {
   }
 
   function load(callback: () => void): void;
+
+  // services 라이브러리 (장소 검색 등)
+  namespace services {
+    /** 검색 결과 상태 코드 */
+    enum Status {
+      OK = 'OK',
+      ZERO_RESULT = 'ZERO_RESULT',
+      ERROR = 'ERROR',
+    }
+
+    /** 키워드 검색 결과 항목 (일부 필드만 선언) */
+    interface PlacesSearchResultItem {
+      id: string;
+      place_name: string;
+      category_group_name: string;
+      category_name: string;
+      address_name: string;
+      road_address_name: string;
+      /** 경도 (문자열) */
+      x: string;
+      /** 위도 (문자열) */
+      y: string;
+      phone: string;
+      place_url: string;
+    }
+
+    interface Pagination {
+      totalCount: number;
+      hasNextPage: boolean;
+      current: number;
+      gotoPage(page: number): void;
+      nextPage(): void;
+    }
+
+    interface KeywordSearchOptions {
+      /** 결과 개수 (1~15) */
+      size?: number;
+      /** 페이지 번호 */
+      page?: number;
+    }
+
+    class Places {
+      constructor();
+      keywordSearch(
+        keyword: string,
+        callback: (
+          result: PlacesSearchResultItem[],
+          status: Status,
+          pagination: Pagination,
+        ) => void,
+        options?: KeywordSearchOptions,
+      ): void;
+    }
+  }
 }
 
 interface Window {

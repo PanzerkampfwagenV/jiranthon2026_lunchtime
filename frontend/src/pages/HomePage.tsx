@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSearch } from '../store/SearchContext';
 import { useGeolocation } from '../hooks/useGeolocation';
+import { usePlaceSearch } from '../hooks/usePlaceSearch';
 import { fetchRecommendations } from '../api/recommendations';
 import type { TravelMode } from '../types';
 import './HomePage.css';
@@ -26,6 +27,14 @@ export default function HomePage() {
     setPlaces,
   } = useSearch();
   const { loading: gpsLoading, requestLocation } = useGeolocation();
+  const {
+    suggestions,
+    loading: searchLoading,
+    error: searchError,
+    available: searchAvailable,
+    search,
+    clear: clearSuggestions,
+  } = usePlaceSearch();
 
   const [manualLabel, setManualLabel] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -37,13 +46,31 @@ export default function HomePage() {
       const coords = await requestLocation();
       setLocation({ coords, label: '현재 위치', fromGps: true });
       setManualLabel('');
+      clearSuggestions();
     } catch (err) {
       setError(err instanceof Error ? err.message : '위치를 가져오지 못했습니다.');
     }
   };
 
-  // TODO(개발자 A): Kakao Map 장소 검색 자동완성으로 교체 예정.
-  // 지금은 라벨만 입력받고 좌표는 서울시청으로 임시 지정한다.
+  // 입력값 변경 시 Kakao 장소 검색 실행 (SDK 사용 가능할 때만)
+  const handleManualChange = (value: string) => {
+    setManualLabel(value);
+    if (searchAvailable) {
+      search(value);
+    }
+  };
+
+  // 검색 결과에서 장소 선택 → 실제 좌표로 위치 확정
+  const handleSelectSuggestion = (
+    name: string,
+    coords: { lat: number; lng: number },
+  ) => {
+    setLocation({ coords, label: name, fromGps: false });
+    setManualLabel(name);
+    clearSuggestions();
+  };
+
+  // SDK 미사용(키 없음) 시 폴백: 라벨만 입력받고 좌표는 서울시청으로 임시 지정.
   const handleManualConfirm = () => {
     const trimmed = manualLabel.trim();
     if (!trimmed) return;
@@ -107,20 +134,55 @@ export default function HomePage() {
             <input
               type="text"
               className="input"
-              placeholder="장소/주소 직접 입력"
+              placeholder={
+                searchAvailable ? '장소/주소 검색' : '장소/주소 직접 입력'
+              }
               value={manualLabel}
-              onChange={(e) => setManualLabel(e.target.value)}
-              aria-label="장소 또는 주소 직접 입력"
+              onChange={(e) => handleManualChange(e.target.value)}
+              aria-label="장소 또는 주소 검색"
+              role="combobox"
+              aria-expanded={suggestions.length > 0}
+              aria-autocomplete="list"
+              autoComplete="off"
             />
-            <button
-              type="button"
-              className="btn"
-              onClick={handleManualConfirm}
-              disabled={!manualLabel.trim()}
-            >
-              확인
-            </button>
+            {!searchAvailable && (
+              <button
+                type="button"
+                className="btn"
+                onClick={handleManualConfirm}
+                disabled={!manualLabel.trim()}
+              >
+                확인
+              </button>
+            )}
           </div>
+
+          {searchAvailable && (searchLoading || suggestions.length > 0) && (
+            <ul className="suggestion-list" role="listbox">
+              {searchLoading && (
+                <li className="suggestion-empty">검색 중…</li>
+              )}
+              {!searchLoading &&
+                suggestions.map((s) => (
+                  <li key={s.id} role="option" aria-selected={false}>
+                    <button
+                      type="button"
+                      className="suggestion-item"
+                      onClick={() => handleSelectSuggestion(s.name, s.coords)}
+                    >
+                      <span className="suggestion-name">{s.name}</span>
+                      <span className="suggestion-addr">{s.address}</span>
+                    </button>
+                  </li>
+                ))}
+            </ul>
+          )}
+
+          {searchError && (
+            <p className="error" role="alert">
+              {searchError}
+            </p>
+          )}
         </div>
         {location && (
           <p className="location-selected" role="status">
