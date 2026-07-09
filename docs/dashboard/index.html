@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>자투리 시간 여행 추천 웹앱 · 개발 진행 대시보드</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --bg-card: #1e293b;
+    --bg-soft: #263449;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --accent: #38bdf8;
+    --green: #34d399;
+    --amber: #fbbf24;
+    --red: #f87171;
+    --border: #334155;
+    --radius: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 32px 24px 64px;
+  }
+  .wrap { max-width: 1200px; margin: 0 auto; }
+
+  header.page {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  header.page h1 { font-size: 1.7rem; font-weight: 700; }
+  header.page p { color: var(--text-dim); margin-top: 6px; font-size: 0.95rem; }
+  .updated {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    border-radius: 999px;
+  }
+
+  /* Overall summary */
+  .overview {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+  .stat {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+  }
+  .stat .label { color: var(--text-dim); font-size: 0.85rem; }
+  .stat .value { font-size: 2rem; font-weight: 700; margin-top: 6px; }
+  .stat .value small { font-size: 1rem; color: var(--text-dim); font-weight: 400; }
+
+  .overall-bar-wrap { margin-top: 14px; }
+  .bar {
+    height: 10px;
+    background: var(--bg-soft);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+  .bar > span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--green));
+    border-radius: 999px;
+    transition: width .4s ease;
+  }
+
+  section { margin-bottom: 36px; }
+  section > h2 {
+    font-size: 1.15rem;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  section > h2::before {
+    content: "";
+    width: 4px; height: 18px;
+    background: var(--accent);
+    border-radius: 2px;
+  }
+
+  /* Milestones */
+  .milestones {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+  }
+  .milestone {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px;
+  }
+  .milestone .m-head {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .milestone .m-title { font-weight: 600; }
+  .milestone .m-goal { color: var(--text-dim); font-size: 0.88rem; }
+  .pill {
+    font-size: 0.72rem;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+  .pill.done { background: rgba(52,211,153,.15); color: var(--green); }
+  .pill.progress { background: rgba(56,189,248,.15); color: var(--accent); }
+  .pill.todo { background: rgba(148,163,184,.15); color: var(--text-dim); }
+
+  /* Owner columns */
+  .owners {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 18px;
+  }
+  .owner {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  .owner .o-head { margin-bottom: 4px; }
+  .owner .o-name { font-size: 1.05rem; font-weight: 700; }
+  .owner .o-role { color: var(--text-dim); font-size: 0.85rem; }
+  .owner .o-progress { margin: 14px 0 18px; }
+  .owner .o-progress .nums { font-size: 0.82rem; color: var(--text-dim); margin-bottom: 6px; display:flex; justify-content:space-between; }
+
+  .group { margin-top: 8px; }
+  .group h4 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-dim);
+    margin: 12px 0 6px;
+  }
+  ul.tasks { list-style: none; }
+  ul.tasks li {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 5px 0;
+    font-size: 0.9rem;
+    border-bottom: 1px solid rgba(51,65,85,.4);
+  }
+  ul.tasks li:last-child { border-bottom: none; }
+  .check {
+    flex: 0 0 auto;
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    border: 1.5px solid var(--border);
+    margin-top: 3px;
+    display: grid;
+    place-items: center;
+    font-size: 11px;
+  }
+  li.done .check { background: var(--green); border-color: var(--green); color: #06281d; }
+  li.done .txt { color: var(--text-dim); text-decoration: line-through; }
+  li.progress .check { border-color: var(--accent); color: var(--accent); }
+
+  footer.page {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.82rem;
+    margin-top: 40px;
+    border-top: 1px solid var(--border);
+    padding-top: 20px;
+  }
+  code {
+    background: var(--bg-soft);
+    padding: 1px 6px;
+    border-radius: 6px;
+    font-size: 0.85em;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="page">
+    <div>
+      <h1>자투리 시간 여행 추천 웹앱</h1>
+      <p>개발 진행 상황 대시보드 · 본부장님 보고용</p>
+    </div>
+    <div class="updated" id="updated">업데이트: —</div>
+  </header>
+
+  <!-- 전체 요약 -->
+  <div class="overview">
+    <div class="stat">
+      <div class="label">전체 진행률</div>
+      <div class="value" id="overallPct">0%</div>
+      <div class="overall-bar-wrap"><div class="bar"><span id="overallBar" style="width:0%"></span></div></div>
+    </div>
+    <div class="stat">
+      <div class="label">완료 작업</div>
+      <div class="value"><span id="doneCount">0</span> <small>/ <span id="totalCount">0</span></small></div>
+    </div>
+    <div class="stat">
+      <div class="label">진행 중</div>
+      <div class="value" id="progressCount">0</div>
+    </div>
+    <div class="stat">
+      <div class="label">현재 마일스톤</div>
+      <div class="value" style="font-size:1.4rem" id="currentMilestone">1. 셋업</div>
+    </div>
+  </div>
+
+  <!-- 마일스톤 -->
+  <section>
+    <h2>마일스톤</h2>
+    <div class="milestones" id="milestones"></div>
+  </section>
+
+  <!-- 담당자별 -->
+  <section>
+    <h2>담당자별 진행 상황</h2>
+    <div class="owners" id="owners"></div>
+  </section>
+
+  <footer class="page">
+    작업 데이터는 <code>docs/TASKS.md</code> 기준. 상태 변경 시 이 파일의 <code>DATA</code> 값을 갱신하세요.
+  </footer>
+</div>
+
+<script>
+  // ── 진행 상황 데이터 ─────────────────────────────
+  // status: "done" | "progress" | "todo"
+  const DATA = {
+    updated: "2026-07-09",
+    milestones: [
+      { title: "1. 셋업", goal: "저장소·API 계약·디자인 확정, 각자 프로젝트 초기화", status: "progress" },
+      { title: "2. 핵심 기능", goal: "A: 입력 / B: 결과·지도 / C: 추천 API (Mock 병렬 개발)", status: "todo" },
+      { title: "3. 연동", goal: "실제 API 연결, FE-BE 통합", status: "todo" },
+      { title: "4. 완성", goal: "예외 처리, 반응형, 테스트, 배포", status: "todo" }
+    ],
+    common: {
+      name: "공통 선행 작업",
+      role: "전원 협의",
+      groups: [
+        { name: "협의", tasks: [
+          { t: "저장소 구조 결정 (monorepo vs 분리)", status: "todo" },
+          { t: "지도/길찾기 API 확정", status: "todo" },
+          { t: "API 인터페이스 계약 정의", status: "todo" },
+          { t: "브랜치/커밋/리뷰 규칙 합의", status: "done" },
+          { t: "환경변수·API 키 관리 방식 합의", status: "todo" },
+          { t: "디자인 시안/와이어프레임 공유", status: "todo" }
+        ]}
+      ]
+    },
+    owners: [
+      {
+        name: "개발자 A", role: "프론트엔드 · 입력 & 첫 화면",
+        groups: [
+          { name: "초기 세팅", tasks: [
+            { t: "React + TS + Vite 프로젝트 생성", status: "todo" },
+            { t: "라우팅 구성", status: "todo" },
+            { t: "공통 UI/스타일 시스템 세팅", status: "todo" }
+          ]},
+          { name: "첫 화면 & 위치 입력", tasks: [
+            { t: "랜딩 레이아웃 구현", status: "todo" },
+            { t: "GPS 현재 위치 연동", status: "todo" },
+            { t: "GPS 실패 예외 처리", status: "todo" },
+            { t: "지정 위치 검색 자동완성", status: "todo" },
+            { t: "위치 결과 마커/좌표 확정", status: "todo" }
+          ]},
+          { name: "시간 입력 & 연동", tasks: [
+            { t: "자투리 시간 입력 UI", status: "todo" },
+            { t: "이동 수단 선택 옵션", status: "todo" },
+            { t: "입력값 유효성 검증", status: "todo" },
+            { t: "전역 상태 관리 세팅", status: "todo" },
+            { t: "추천 API 호출/로딩·에러 처리", status: "todo" }
+          ]}
+        ]
+      },
+      {
+        name: "개발자 B", role: "프론트엔드 · 결과 & 지도",
+        groups: [
+          { name: "추천 결과 화면", tasks: [
+            { t: "결과 목록 레이아웃", status: "todo" },
+            { t: "장소 카드 컴포넌트", status: "todo" },
+            { t: "정렬/필터 기능", status: "todo" },
+            { t: "결과없음/로딩/에러 UI", status: "todo" }
+          ]},
+          { name: "지도 시각화", tasks: [
+            { t: "지도 SDK 통합", status: "todo" },
+            { t: "위치·추천 장소 마커", status: "todo" },
+            { t: "마커 클릭 정보 팝업", status: "todo" },
+            { t: "목록 ↔ 지도 상호 연동", status: "todo" },
+            { t: "경로/이동시간 시각화 (선택)", status: "todo" }
+          ]},
+          { name: "상세 & 마무리", tasks: [
+            { t: "장소 상세 화면/모달", status: "todo" },
+            { t: "반응형 레이아웃", status: "todo" },
+            { t: "접근성 점검", status: "todo" }
+          ]}
+        ]
+      },
+      {
+        name: "개발자 C", role: "백엔드 & 추천 로직",
+        groups: [
+          { name: "서버 세팅", tasks: [
+            { t: "백엔드 프로젝트 초기화", status: "todo" },
+            { t: "구조/라우팅/에러 미들웨어", status: "todo" },
+            { t: "CORS·환경변수·로깅", status: "todo" },
+            { t: "API 문서화 (Swagger)", status: "todo" }
+          ]},
+          { name: "외부 API 연동", tasks: [
+            { t: "장소 검색 API 연동", status: "todo" },
+            { t: "길찾기/이동시간 API 연동", status: "todo" },
+            { t: "응답 캐싱/호출 최적화", status: "todo" }
+          ]},
+          { name: "추천 로직", tasks: [
+            { t: "추천 엔드포인트 구현", status: "todo" },
+            { t: "후보 장소 수집", status: "todo" },
+            { t: "도달 가능 여부 필터링", status: "todo" },
+            { t: "이동수단별 시간 계산", status: "todo" },
+            { t: "추천 랭킹/스코어링", status: "todo" },
+            { t: "입력 검증/에러 규격화", status: "todo" }
+          ]},
+          { name: "데이터 & 배포", tasks: [
+            { t: "여행지 데이터 확보/정제", status: "todo" },
+            { t: "DB 설계 (필요 시)", status: "todo" },
+            { t: "추천 로직 단위 테스트", status: "todo" },
+            { t: "배포 환경/키 보안 관리", status: "todo" }
+          ]}
+        ]
+      }
+    ]
+  };
+
+  // ── 렌더링 ─────────────────────────────
+  const CHECK = { done: "✓", progress: "…", todo: "" };
+  const PILL_LABEL = { done: "완료", progress: "진행 중", todo: "예정" };
+
+  function collectTasks() {
+    const all = [];
+    DATA.common.groups.forEach(g => g.tasks.forEach(t => all.push(t)));
+    DATA.owners.forEach(o => o.groups.forEach(g => g.tasks.forEach(t => all.push(t))));
+    return all;
+  }
+
+  function ownerStats(owner) {
+    const tasks = owner.groups.flatMap(g => g.tasks);
+    const done = tasks.filter(t => t.status === "done").length;
+    return { done, total: tasks.length, pct: tasks.length ? Math.round(done / tasks.length * 100) : 0 };
+  }
+
+  function renderOverview() {
+    const all = collectTasks();
+    const total = all.length;
+    const done = all.filter(t => t.status === "done").length;
+    const progress = all.filter(t => t.status === "progress").length;
+    const pct = total ? Math.round(done / total * 100) : 0;
+    document.getElementById("overallPct").textContent = pct + "%";
+    document.getElementById("overallBar").style.width = pct + "%";
+    document.getElementById("doneCount").textContent = done;
+    document.getElementById("totalCount").textContent = total;
+    document.getElementById("progressCount").textContent = progress;
+    const current = DATA.milestones.find(m => m.status === "progress")
+      || DATA.milestones.find(m => m.status === "todo") || DATA.milestones[DATA.milestones.length-1];
+    document.getElementById("currentMilestone").textContent = current ? current.title : "—";
+    document.getElementById("updated").textContent = "업데이트: " + DATA.updated;
+  }
+
+  function renderMilestones() {
+    const el = document.getElementById("milestones");
+    el.innerHTML = DATA.milestones.map(m => `
+      <div class="milestone">
+        <div class="m-head">
+          <span class="m-title">${m.title}</span>
+          <span class="pill ${m.status}">${PILL_LABEL[m.status]}</span>
+        </div>
+        <div class="m-goal">${m.goal}</div>
+      </div>`).join("");
+  }
+
+  function renderOwnerCard(owner) {
+    const s = ownerStats(owner);
+    const groups = owner.groups.map(g => `
+      <div class="group">
+        <h4>${g.name}</h4>
+        <ul class="tasks">
+          ${g.tasks.map(t => `
+            <li class="${t.status}">
+              <span class="check">${CHECK[t.status]}</span>
+              <span class="txt">${t.t}</span>
+            </li>`).join("")}
+        </ul>
+      </div>`).join("");
+    return `
+      <div class="owner">
+        <div class="o-head">
+          <div class="o-name">${owner.name}</div>
+          <div class="o-role">${owner.role}</div>
+        </div>
+        <div class="o-progress">
+          <div class="nums"><span>진행률</span><span>${s.done}/${s.total} · ${s.pct}%</span></div>
+          <div class="bar"><span style="width:${s.pct}%"></span></div>
+        </div>
+        ${groups}
+      </div>`;
+  }
+
+  function renderOwners() {
+    const el = document.getElementById("owners");
+    el.innerHTML = [DATA.common, ...DATA.owners].map(renderOwnerCard).join("");
+  }
+
+  renderOverview();
+  renderMilestones();
+  renderOwners();
+</script>
+</body>
+</html>
