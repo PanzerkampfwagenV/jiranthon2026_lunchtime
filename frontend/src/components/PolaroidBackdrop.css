@@ -1,0 +1,121 @@
+.polaroid-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.polaroid-backdrop__photo {
+  position: absolute;
+  margin: 0;
+  padding: 10px 10px 8px;
+  background: #fdfdfb;
+  border-radius: 4px;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.18),
+    0 2px 6px rgba(0, 0, 0, 0.12);
+  transform: rotate(var(--rotate, 0deg));
+  transition: transform 0.8s ease;
+  animation: polaroid-float 7s ease-in-out var(--float-delay, 0s) infinite;
+  opacity: 0;
+  animation-fill-mode: forwards;
+}
+
+.polaroid-backdrop__photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  filter: saturate(1.05) contrast(1.02);
+  animation: polaroid-photo-fade 0.6s ease;
+}
+
+@keyframes polaroid-photo-fade {
+  from {
+    opacity: 0;
+    transform: scale(1.04);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.polaroid-backdrop__caption {
+  margin: 8px 2px 4px;
+  min-height: 2.6em;
+  font-family: 'Gaegu', 'Apple SD Gothic Neo', sans-serif;
+  font-size: 1.05rem;
+  line-height: 1.35;
+  color: #3a3a3a;
+  text-align: center;
+  white-space: pre-line;
+  animation: polaroid-photo-fade 0.6s ease;
+}
+
+@keyframes polaroid-float {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--rotate, 0deg)) translateY(18px) scale(0.96);
+  }
+  8% {
+    opacity: 0.9;
+  }
+  50% {
+    transform: rotate(calc(var(--rotate, 0deg) + 1.5deg)) translateY(-10px) scale(1);
+  }
+  100% {
+    opacity: 0.9;
+    transform: rotate(var(--rotate, 0deg)) translateY(18px) scale(0.96);
+  }
+}
+
+.polaroid-backdrop__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.12) 0%,
+    rgba(255, 255, 255, 0.55) 45%,
+    rgba(255, 255, 255, 0.85) 100%
+  );
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) .polaroid-backdrop__scrim {
+    background: linear-gradient(
+      180deg,
+      rgba(16, 17, 19, 0.25) 0%,
+      rgba(16, 17, 19, 0.65) 45%,
+      rgba(16, 17, 19, 0.9) 100%
+    );
+  }
+}
+
+:root[data-theme='dark'] .polaroid-backdrop__scrim {
+  background: linear-gradient(
+    180deg,
+    rgba(16, 17, 19, 0.25) 0%,
+    rgba(16, 17, 19, 0.65) 45%,
+    rgba(16, 17, 19, 0.9) 100%
+  );
+}
+
+@media (max-width: 640px) {
+  .polaroid-backdrop__photo {
+    width: 165px !important;
+  }
+
+  .polaroid-backdrop__caption {
+    font-size: 0.92rem;
+    min-height: 2.4em;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .polaroid-backdrop__photo {
+    animation: none;
+    opacity: 0.85;
+  }
+}

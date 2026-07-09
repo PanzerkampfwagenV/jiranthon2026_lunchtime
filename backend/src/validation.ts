@@ -131,3 +131,29 @@ export function parseRouteQuery(
 
   return { origin, destination, mode: mode as TravelMode };
 }
+
+/** GET /api/place-detail 쿼리 파라미터 파싱 결과 */
+export interface PlaceDetailQuery {
+  name: string;
+  category: string;
+}
+
+const MAX_NAME_LENGTH = 100;
+const MAX_CATEGORY_LENGTH = 50;
+
+/** GET /api/place-detail?name=...&category=... 쿼리 검증 */
+export function parsePlaceDetailQuery(
+  query: Record<string, unknown>,
+): PlaceDetailQuery {
+  const { name, category } = query;
+  if (typeof name !== 'string' || name.trim() === '') {
+    throw AppError.invalidInput('name은 필수입니다.');
+  }
+  if (name.length > MAX_NAME_LENGTH) {
+    throw AppError.invalidInput(`name은 ${MAX_NAME_LENGTH}자를 넘을 수 없습니다.`);
+  }
+  const parsedCategory =
+    typeof category === 'string' ? category.slice(0, MAX_CATEGORY_LENGTH) : '장소';
+
+  return { name: name.trim(), category: parsedCategory };
+}

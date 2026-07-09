@@ -4,6 +4,14 @@ import { useSearch } from '../store/SearchContext';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { usePlaceSearch } from '../hooks/usePlaceSearch';
 import { fetchRecommendations } from '../api/recommendations';
+import PolaroidBackdrop from '../components/PolaroidBackdrop';
+import {
+  APP_SETTINGS,
+  applyTheme,
+  getStoredTheme,
+  storeTheme,
+  type ThemeMode,
+} from '../config/settings';
 import type { TravelMode } from '../types';
 import './HomePage.css';
 
@@ -14,6 +22,18 @@ const MODE_OPTIONS: { value: TravelMode; label: string; icon: string }[] = [
   { value: 'transit', label: '대중교통', icon: '🚌' },
   { value: 'driving', label: '자동차', icon: '🚗' },
 ];
+
+const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
+  { value: 'system', label: '시스템 설정' },
+  { value: 'light', label: '라이트' },
+  { value: 'dark', label: '다크' },
+];
+
+const THEME_ICONS: Record<ThemeMode, string> = {
+  system: '🌗',
+  light: '☀️',
+  dark: '🌙',
+};
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -39,6 +59,15 @@ export default function HomePage() {
   const [manualLabel, setManualLabel] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [theme, setTheme] = useState<ThemeMode>(
+    () => getStoredTheme() ?? APP_SETTINGS.theme,
+  );
+
+  const handleThemeChange = (next: ThemeMode) => {
+    setTheme(next);
+    storeTheme(next);
+    applyTheme(next);
+  };
 
   const handleUseGps = async () => {
     setError(null);
@@ -110,6 +139,24 @@ export default function HomePage() {
 
   return (
     <main className="home">
+      <PolaroidBackdrop />
+      <div className="theme-switch" role="group" aria-label="화면 모드 선택">
+        {THEME_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            type="button"
+            className={`theme-switch__option ${
+              theme === opt.value ? 'theme-switch__option--active' : ''
+            }`}
+            onClick={() => handleThemeChange(opt.value)}
+            aria-pressed={theme === opt.value}
+            aria-label={opt.label}
+            title={opt.label}
+          >
+            {THEME_ICONS[opt.value]}
+          </button>
+        ))}
+      </div>
       <header className="home__hero">
         <h1 className="home__title">자투리 시간, 어디로 떠날까?</h1>
         <p className="home__subtitle">

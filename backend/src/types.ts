@@ -40,6 +40,15 @@ export interface RecommendationResponse {
   places: Place[];
 }
 
+/** 장소 상세 정보 응답 (GET /api/place-detail) */
+export interface PlaceDetailResponse {
+  activities: string[];
+  highlights: string[];
+  summary: string;
+  /** LLM으로 생성됐는지 여부. false면 정적 폴백. */
+  generated: boolean;
+}
+
 /** 에러 코드 */
 export type ErrorCode = 'INVALID_INPUT' | 'NO_RESULT' | 'UPSTREAM_ERROR';
 
