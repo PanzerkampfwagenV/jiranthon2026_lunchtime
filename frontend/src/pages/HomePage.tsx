@@ -186,7 +186,10 @@ export default function HomePage() {
         </div>
         {location && (
           <p className="location-selected" role="status">
-            선택된 위치: <strong>{location.label}</strong>
+            선택된 위치: <strong>{location.label}</strong>{' '}
+            <span className="location-coords">
+              ({location.coords.lat.toFixed(6)}, {location.coords.lng.toFixed(6)})
+            </span>
           </p>
         )}
       </section>
