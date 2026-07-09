@@ -20,6 +20,8 @@ interface UsePlaceSearchResult {
   available: boolean;
   search: (keyword: string) => void;
   clear: () => void;
+  /** 좌표 → 가장 가까운 장소/건물/주소 이름 (역지오코딩). 실패 시 null */
+  reverseGeocode: (coords: LatLng) => Promise<string | null>;
 }
 
 /**
@@ -163,5 +165,39 @@ export function usePlaceSearch(): UsePlaceSearchResult {
     [status, clear],
   );
 
-  return { suggestions, loading, error, available, search, clear };
+  // 현재 위치 좌표를 사람이 읽을 수 있는 이름으로 변환한다.
+  // 카카오 역지오코딩(coord2Address)으로 도로명 주소를 우선 사용하고,
+  // 없으면 지번 주소로 폴백한다. 둘 다 없으면 null.
+  const reverseGeocode = useCallback(
+    (coords: LatLng): Promise<string | null> => {
+      if (status !== 'ready' || !window.kakao?.maps?.services) {
+        return Promise.resolve(null);
+      }
+
+      const { services } = window.kakao.maps;
+      if (!geocoderRef.current) {
+        geocoderRef.current = new services.Geocoder();
+      }
+      const geocoder = geocoderRef.current;
+
+      return new Promise((resolve) => {
+        geocoder.coord2Address(
+          coords.lng,
+          coords.lat,
+          (result, addrStatus) => {
+            if (addrStatus === services.Status.OK && result.length > 0) {
+              const road = result[0].road_address?.address_name;
+              const jibun = result[0].address?.address_name;
+              resolve(road || jibun || null);
+            } else {
+              resolve(null);
+            }
+          },
+        );
+      });
+    },
+    [status],
+  );
+
+  return { suggestions, loading, error, available, search, clear, reverseGeocode };
 }

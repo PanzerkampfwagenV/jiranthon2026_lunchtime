@@ -176,6 +176,14 @@ declare namespace kakao.maps {
       y: string;
     }
 
+    /** 좌표 → 주소 변환 결과 항목 (일부 필드만 선언) */
+    interface Coord2AddressResultItem {
+      /** 도로명 주소 (없을 수 있음) */
+      road_address: { address_name: string } | null;
+      /** 지번 주소 */
+      address: { address_name: string } | null;
+    }
+
     /** 주소 ↔ 좌표 변환 서비스. "서울", "강남구"처럼 지역/주소를 입력했을 때 사용한다. */
     class Geocoder {
       constructor();
@@ -183,6 +191,15 @@ declare namespace kakao.maps {
         address: string,
         callback: (
           result: AddressSearchResultItem[],
+          status: Status,
+        ) => void,
+      ): void;
+      /** 좌표(경도 x, 위도 y)를 주소로 변환한다. */
+      coord2Address(
+        x: number,
+        y: number,
+        callback: (
+          result: Coord2AddressResultItem[],
           status: Status,
         ) => void,
       ): void;

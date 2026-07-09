@@ -66,6 +66,7 @@ export default function HomePage() {
     available: searchAvailable,
     search,
     clear: clearSuggestions,
+    reverseGeocode,
   } = usePlaceSearch();
 
   const [manualLabel, setManualLabel] = useState('');
@@ -133,7 +134,10 @@ export default function HomePage() {
     setError(null);
     try {
       const coords = await requestLocation();
-      setLocation({ coords, label: t.currentLocation, fromGps: true });
+      // 좌표를 가장 가까운 장소/주소 이름으로 변환해 라벨로 사용한다.
+      // 실패하면 기본 라벨("현재 위치")로 폴백한다.
+      const name = await reverseGeocode(coords);
+      setLocation({ coords, label: name ?? t.currentLocation, fromGps: true });
       setManualLabel('');
       clearSuggestions();
       setCustomized((prev) => ({ ...prev, location: true }));
@@ -217,7 +221,8 @@ export default function HomePage() {
       let effectiveLocation = location;
       if (!effectiveLocation) {
         const coords = await requestLocation();
-        effectiveLocation = { coords, label: t.currentLocation, fromGps: true };
+        const name = await reverseGeocode(coords);
+        effectiveLocation = { coords, label: name ?? t.currentLocation, fromGps: true };
         setLocation(effectiveLocation);
       }
       const { places } = await fetchRecommendations({
@@ -384,7 +389,7 @@ export default function HomePage() {
             <p className="location-selected" role="status">
               {t.selectedLocationPrefix}<strong>{location.label}</strong>{' '}
               <span className="location-coords">
-                ({location.coords.lat.toFixed(6)}, {location.coords.lng.toFixed(6)})
+                ({location.coords.lat.toFixed(1)}, {location.coords.lng.toFixed(1)})
               </span>
             </p>
           )}
