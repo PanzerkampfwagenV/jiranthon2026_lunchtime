@@ -242,11 +242,11 @@
   // ── 진행 상황 데이터 ─────────────────────────────
   // status: "done" | "progress" | "todo"
   const DATA = {
-    updated: "2026-07-09",
+    updated: "2026-07-09 (LLM 추천·카카오 좌표 보정·E2E 반영)",
     milestones: [
       { title: "1. 셋업", goal: "저장소·API 계약·디자인 확정, 각자 프로젝트 초기화", status: "done" },
       { title: "2. 핵심 기능", goal: "A: 입력 / B: 결과·지도 / C: 추천 API (구현 완료, 시드 데이터 기반)", status: "done" },
-      { title: "3. 연동", goal: "실제 API 연결, FE-BE 통합 (로컬 연동 완료, 지도 SDK 로드 이슈 남음)", status: "progress" },
+      { title: "3. 연동", goal: "FE-BE 통합·지도 로드·LLM 추천·카카오 좌표 보정 연동 완료 / 길찾기·캐싱 남음", status: "progress" },
       { title: "4. 완성", goal: "예외 처리, 반응형, 테스트, 배포", status: "todo" }
     ],
     common: {
@@ -276,8 +276,8 @@
             { t: "랜딩 레이아웃 구현", status: "done" },
             { t: "GPS 현재 위치 연동", status: "done" },
             { t: "GPS 실패 예외 처리", status: "done" },
-            { t: "지정 위치 검색 자동완성", status: "progress" },
-            { t: "위치 결과 마커/좌표 확정", status: "progress" }
+            { t: "지정 위치 검색 자동완성", status: "done" },
+            { t: "위치 결과 마커/좌표 확정", status: "done" }
           ]},
           { name: "시간 입력 & 연동", tasks: [
             { t: "자투리 시간 입력 UI", status: "done" },
@@ -321,12 +321,13 @@
             { t: "API 문서화 (Swagger)", status: "todo" }
           ]},
           { name: "외부 API 연동", tasks: [
-            { t: "장소 검색 API 연동", status: "todo" },
+            { t: "장소 검색 API 연동 (카카오 로컬)", status: "done" },
             { t: "길찾기/이동시간 API 연동", status: "todo" },
             { t: "응답 캐싱/호출 최적화", status: "todo" }
           ]},
           { name: "추천 로직", tasks: [
             { t: "추천 엔드포인트 구현", status: "done" },
+            { t: "LLM 기반 장소 추천 (Claude+폴백)", status: "done" },
             { t: "후보 장소 수집", status: "done" },
             { t: "도달 가능 여부 필터링", status: "done" },
             { t: "이동수단별 시간 계산", status: "done" },
