@@ -12,8 +12,8 @@ export interface AppSettings {
 export const APP_SETTINGS: AppSettings = {
   theme: 'system',
   glassmorphism: {
-    heroCardOpacity: 0.5,
-    buttonChipOpacity: 0.4,
+    heroCardOpacity: 0.25,
+    buttonChipOpacity: 0.15,
   },
 };
 
