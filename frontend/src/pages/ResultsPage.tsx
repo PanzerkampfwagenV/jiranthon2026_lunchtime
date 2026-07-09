@@ -1,16 +1,24 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSearch } from '../store/SearchContext';
+import { useI18n } from '../i18n/LanguageContext';
 import MapView from '../components/MapView';
 import PlaceCard from '../components/PlaceCard';
 import ResultControls, { type SortKey } from '../components/ResultControls';
 import PlaceDetailModal from '../components/PlaceDetailModal';
-import type { Place } from '../types';
+import type { Place, TravelMode } from '../types';
 import './ResultsPage.css';
 
 // 개발자 B 담당: 추천 결과 목록 + 지도 시각화.
 export default function ResultsPage() {
   const { location, availableMinutes, mode, places } = useSearch();
+  const { t } = useI18n();
+
+  const MODE_LABELS: Record<TravelMode, string> = {
+    walking: t.modeWalking,
+    transit: t.modeTransit,
+    driving: t.modeDriving,
+  };
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [sortKey, setSortKey] = useState<SortKey>('travelMinutes');
@@ -43,10 +51,10 @@ export default function ResultsPage() {
     return (
       <main className="home">
         <section className="card">
-          <p>검색 정보가 없어요. 처음부터 다시 시작해 주세요.</p>
+          <p>{t.resultsNoInfo}</p>
         </section>
         <Link to="/" className="btn btn--full">
-          ← 검색하러 가기
+          {t.goSearch}
         </Link>
       </main>
     );
@@ -55,18 +63,16 @@ export default function ResultsPage() {
   return (
     <main className="results">
       <header className="home__hero">
-        <h1 className="home__title">추천 결과</h1>
+        <h1 className="home__title">{t.resultsTitle}</h1>
         <p className="home__subtitle">
-          {location.label} · {availableMinutes}분 · {mode}
+          {location.label} · {availableMinutes}{t.minutesSuffix} · {MODE_LABELS[mode]}
         </p>
       </header>
 
       {places.length === 0 ? (
         <section className="card results__empty">
-          <p>조건에 맞는 장소가 없어요.</p>
-          <p className="results__empty-hint">
-            시간을 늘리거나 이동 수단을 바꿔보세요.
-          </p>
+          <p>{t.resultsEmpty}</p>
+          <p className="results__empty-hint">{t.resultsEmptyHint}</p>
         </section>
       ) : (
         <div className="results__layout">
@@ -86,8 +92,8 @@ export default function ResultsPage() {
             {routeInfo && !routeInfo.isActualRoute && (
               <p className="results__route-note">
                 {mode === 'transit'
-                  ? '대중교통 경로는 지도에서 제공되지 않아 직선으로 표시돼요.'
-                  : '실제 경로를 불러오지 못해 직선으로 표시돼요.'}
+                  ? t.routeNoteTransit
+                  : t.routeNoteFallback}
               </p>
             )}
           </div>
@@ -102,9 +108,7 @@ export default function ResultsPage() {
             />
 
             {visiblePlaces.length === 0 ? (
-              <p className="results__empty-hint">
-                선택한 종류에 해당하는 장소가 없어요.
-              </p>
+              <p className="results__empty-hint">{t.resultsCategoryEmpty}</p>
             ) : (
               <ul className="result-list">
                 {visiblePlaces.map((place) => (
@@ -129,7 +133,7 @@ export default function ResultsPage() {
       )}
 
       <Link to="/" className="btn btn--full">
-        ← 다시 검색
+        {t.backToSearch}
       </Link>
 
       <PlaceDetailModal

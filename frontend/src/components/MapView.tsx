@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { LatLng, Place, TravelMode } from '../types';
 import { useKakaoLoader } from '../hooks/useKakaoLoader';
 import { fetchRoute } from '../api/route';
+import { useI18n } from '../i18n/LanguageContext';
 
 interface MapViewProps {
   /** 출발지(사용자) 좌표 */
@@ -37,6 +38,7 @@ export default function MapView({
   onRouteChange,
 }: MapViewProps) {
   const status = useKakaoLoader();
+  const { t } = useI18n();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<kakao.maps.Map | null>(null);
   const markersRef = useRef<Map<string, kakao.maps.Marker>>(new Map());
@@ -47,6 +49,9 @@ export default function MapView({
   onSelectRef.current = onSelect;
   const onRouteChangeRef = useRef(onRouteChange);
   onRouteChangeRef.current = onRouteChange;
+  // 출발지 마커 title(번역)도 effect 재실행 없이 최신값을 참조하도록 ref로 보관
+  const originTitleRef = useRef(t.mapOriginTitle);
+  originTitleRef.current = t.mapOriginTitle;
 
   // 지도 초기화 + 마커 렌더링
   useEffect(() => {
@@ -68,7 +73,7 @@ export default function MapView({
     new kakao.maps.Marker({
       position: originLatLng,
       map,
-      title: '출발지',
+      title: originTitleRef.current,
       zIndex: 5,
     });
 
@@ -175,10 +180,8 @@ export default function MapView({
 
   if (status === 'no-key') {
     return (
-      <div className="map-view map-view--placeholder" role="img" aria-label="지도 미리보기 없음">
-        <p>
-          지도를 표시하려면 <code>VITE_KAKAO_MAP_KEY</code>를 설정하세요.
-        </p>
+      <div className="map-view map-view--placeholder" role="img" aria-label={t.mapNoKey}>
+        <p>{t.mapNoKey}</p>
       </div>
     );
   }
@@ -186,7 +189,7 @@ export default function MapView({
   if (status === 'error') {
     return (
       <div className="map-view map-view--placeholder" role="alert">
-        <p>지도를 불러오지 못했습니다.</p>
+        <p>{t.mapError}</p>
       </div>
     );
   }
@@ -196,7 +199,7 @@ export default function MapView({
       <div ref={containerRef} className="map-view__canvas" />
       {status !== 'ready' && (
         <div className="map-view__loading" role="status">
-          지도 불러오는 중…
+          {t.mapLoading}
         </div>
       )}
     </div>

@@ -361,7 +361,7 @@
 
 .theme-switch {
   position: fixed;
-  top: max(0.75rem, env(safe-area-inset-top));
+  top: calc(max(0.75rem, env(safe-area-inset-top)) + 3rem);
   right: 0.75rem;
   z-index: 10;
   display: flex;

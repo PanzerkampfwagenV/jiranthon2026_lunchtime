@@ -5,6 +5,8 @@ import { useGeolocation } from '../hooks/useGeolocation';
 import { usePlaceSearch } from '../hooks/usePlaceSearch';
 import { fetchRecommendations } from '../api/recommendations';
 import PolaroidBackdrop from '../components/PolaroidBackdrop';
+import LanguageSwitch from '../components/LanguageSwitch';
+import { useI18n } from '../i18n/LanguageContext';
 import {
   APP_SETTINGS,
   applyTheme,
@@ -17,10 +19,10 @@ import './HomePage.css';
 
 const TIME_PRESETS = [30, 60, 90, 120];
 
-const MODE_OPTIONS: { value: TravelMode; label: string; icon: string }[] = [
-  { value: 'walking', label: '도보', icon: '🚶' },
-  { value: 'transit', label: '대중교통', icon: '🚌' },
-  { value: 'driving', label: '자동차', icon: '🚗' },
+const MODE_OPTIONS: { value: TravelMode; icon: string }[] = [
+  { value: 'walking', icon: '🚶' },
+  { value: 'transit', icon: '🚌' },
+  { value: 'driving', icon: '🚗' },
 ];
 
 const MBTI_OPTIONS: MbtiType[] = [
@@ -30,11 +32,7 @@ const MBTI_OPTIONS: MbtiType[] = [
   'ESTJ', 'ESFJ', 'ENFJ', 'ENTJ',
 ];
 
-const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
-  { value: 'system', label: '시스템 설정' },
-  { value: 'light', label: '라이트' },
-  { value: 'dark', label: '다크' },
-];
+const THEME_OPTIONS: ThemeMode[] = ['system', 'light', 'dark'];
 
 const THEME_ICONS: Record<ThemeMode, string> = {
   system: '🌗',
@@ -44,23 +42,9 @@ const THEME_ICONS: Record<ThemeMode, string> = {
 
 type PanelKey = 'location' | 'time' | 'mode' | 'mbti' | 'luckyDay';
 
-const MODE_LABELS: Record<TravelMode, string> = {
-  walking: '도보',
-  transit: '대중교통',
-  driving: '자동차',
-};
-
-// 분 단위를 "3시간", "1시간 30분", "45분" 형태로 표현.
-function formatMinutes(minutes: number): string {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h > 0 && m > 0) return `${h}시간 ${m}분`;
-  if (h > 0) return `${h}시간`;
-  return `${m}분`;
-}
-
 export default function HomePage() {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const {
     location,
     availableMinutes,
@@ -114,6 +98,27 @@ export default function HomePage() {
     luckyDay?.gender ?? 'female',
   );
 
+  // 분 단위를 언어에 맞춰 "3시간", "1시간 30분", "45분" 형태로 표현.
+  const formatMinutes = (minutes: number): string => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    if (h > 0 && m > 0) return `${h}${t.hourUnit} ${m}${t.minuteUnit}`;
+    if (h > 0) return `${h}${t.hourUnit}`;
+    return `${m}${t.minuteUnit}`;
+  };
+
+  const MODE_LABELS: Record<TravelMode, string> = {
+    walking: t.modeWalking,
+    transit: t.modeTransit,
+    driving: t.modeDriving,
+  };
+
+  const THEME_LABELS: Record<ThemeMode, string> = {
+    system: t.themeSystem,
+    light: t.themeLight,
+    dark: t.themeDark,
+  };
+
   const togglePanel = (key: PanelKey) => {
     setActivePanel((prev) => (prev === key ? null : key));
   };
@@ -128,12 +133,12 @@ export default function HomePage() {
     setError(null);
     try {
       const coords = await requestLocation();
-      setLocation({ coords, label: '현재 위치', fromGps: true });
+      setLocation({ coords, label: t.currentLocation, fromGps: true });
       setManualLabel('');
       clearSuggestions();
       setCustomized((prev) => ({ ...prev, location: true }));
     } catch (err) {
-      setError(err instanceof Error ? err.message : '위치를 가져오지 못했습니다.');
+      setError(err instanceof Error ? err.message : t.errorLocationFailed);
     }
   };
 
@@ -212,7 +217,7 @@ export default function HomePage() {
       let effectiveLocation = location;
       if (!effectiveLocation) {
         const coords = await requestLocation();
-        effectiveLocation = { coords, label: '현재 위치', fromGps: true };
+        effectiveLocation = { coords, label: t.currentLocation, fromGps: true };
         setLocation(effectiveLocation);
       }
       const { places } = await fetchRecommendations({
@@ -224,7 +229,7 @@ export default function HomePage() {
       navigate('/results');
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : '추천을 불러오지 못했습니다.',
+        err instanceof Error ? err.message : t.errorRecommendFailed,
       );
     } finally {
       setSubmitting(false);
@@ -234,31 +239,30 @@ export default function HomePage() {
   return (
     <main className="home">
       <PolaroidBackdrop />
-      <div className="theme-switch" role="group" aria-label="화면 모드 선택">
-        {THEME_OPTIONS.map((opt) => (
+      <LanguageSwitch />
+      <div className="theme-switch" role="group" aria-label={t.themeGroupLabel}>
+        {THEME_OPTIONS.map((value) => (
           <button
-            key={opt.value}
+            key={value}
             type="button"
             className={`theme-switch__option ${
-              theme === opt.value ? 'theme-switch__option--active' : ''
+              theme === value ? 'theme-switch__option--active' : ''
             }`}
-            onClick={() => handleThemeChange(opt.value)}
-            aria-pressed={theme === opt.value}
-            aria-label={opt.label}
-            title={opt.label}
+            onClick={() => handleThemeChange(value)}
+            aria-pressed={theme === value}
+            aria-label={THEME_LABELS[value]}
+            title={THEME_LABELS[value]}
           >
-            {THEME_ICONS[opt.value]}
+            {THEME_ICONS[value]}
           </button>
         ))}
       </div>
       <header className="home__hero">
-        <h1 className="home__title">자투리 시간, 어디로 떠날까?</h1>
-        <p className="home__subtitle">
-          지금 위치와 남는 시간을 알려주면 다녀올 수 있는 곳을 찾아드려요.
-        </p>
+        <h1 className="home__title">{t.homeTitle}</h1>
+        <p className="home__subtitle">{t.homeSubtitle}</p>
       </header>
 
-      <nav className="hashtags" aria-label="검색 조건 설정">
+      <nav className="hashtags" aria-label={t.searchConditionsLabel}>
         <button
           type="button"
           className={`hashtag ${activePanel === 'location' ? 'hashtag--open' : ''} ${
@@ -267,7 +271,7 @@ export default function HomePage() {
           onClick={() => togglePanel('location')}
           aria-expanded={activePanel === 'location'}
         >
-          #위치{location ? `·${location.label}` : ''}
+          #{t.hashtagLocation}{location ? `·${location.label}` : ''}
         </button>
         <button
           type="button"
@@ -277,7 +281,7 @@ export default function HomePage() {
           onClick={() => togglePanel('time')}
           aria-expanded={activePanel === 'time'}
         >
-          #자투리·{formatMinutes(availableMinutes)}
+          #{t.hashtagTime}·{formatMinutes(availableMinutes)}
         </button>
         <button
           type="button"
@@ -287,7 +291,7 @@ export default function HomePage() {
           onClick={() => togglePanel('mode')}
           aria-expanded={activePanel === 'mode'}
         >
-          #이동수단·{MODE_LABELS[mode]}
+          #{t.hashtagMode}·{MODE_LABELS[mode]}
         </button>
         <button
           type="button"
@@ -297,7 +301,7 @@ export default function HomePage() {
           onClick={() => togglePanel('mbti')}
           aria-expanded={activePanel === 'mbti'}
         >
-          #MBTI{mbti ? `·${mbti}` : ''}
+          #{t.hashtagMbti}{mbti ? `·${mbti}` : ''}
         </button>
         <button
           type="button"
@@ -307,12 +311,12 @@ export default function HomePage() {
           onClick={() => togglePanel('luckyDay')}
           aria-expanded={activePanel === 'luckyDay'}
         >
-          #럭키데이{luckyDay ? `·${luckyDay.birthDate}` : ''}
+          #{t.hashtagLuckyDay}{luckyDay ? `·${luckyDay.birthDate}` : ''}
         </button>
       </nav>
 
       {activePanel === 'location' && (
-        <section className="card" aria-label="위치 설정">
+        <section className="card" aria-label={t.locationPanelLabel}>
           <div className="location-actions">
             <button
               type="button"
@@ -320,18 +324,18 @@ export default function HomePage() {
               onClick={handleUseGps}
               disabled={gpsLoading}
             >
-              {gpsLoading ? '위치 확인 중…' : '📍 현재 위치 사용'}
+              {gpsLoading ? t.gpsLoading : t.useGps}
             </button>
             <div className="location-manual">
               <input
                 type="text"
                 className="input"
                 placeholder={
-                  searchAvailable ? '장소/주소 검색' : '장소/주소 직접 입력'
+                  searchAvailable ? t.searchPlaceholder : t.manualPlaceholder
                 }
                 value={manualLabel}
                 onChange={(e) => handleManualChange(e.target.value)}
-                aria-label="장소 또는 주소 검색"
+                aria-label={t.searchAriaLabel}
                 role="combobox"
                 aria-expanded={suggestions.length > 0}
                 aria-autocomplete="list"
@@ -344,7 +348,7 @@ export default function HomePage() {
                   onClick={handleManualConfirm}
                   disabled={!manualLabel.trim()}
                 >
-                  확인
+                  {t.confirm}
                 </button>
               )}
             </div>
@@ -352,7 +356,7 @@ export default function HomePage() {
             {searchAvailable && (searchLoading || suggestions.length > 0) && (
               <ul className="suggestion-list" role="listbox">
                 {searchLoading && (
-                  <li className="suggestion-empty">검색 중…</li>
+                  <li className="suggestion-empty">{t.searching}</li>
                 )}
                 {!searchLoading &&
                   suggestions.map((s) => (
@@ -378,21 +382,19 @@ export default function HomePage() {
           </div>
           {location && (
             <p className="location-selected" role="status">
-              선택된 위치: <strong>{location.label}</strong>{' '}
+              {t.selectedLocationPrefix}<strong>{location.label}</strong>{' '}
               <span className="location-coords">
                 ({location.coords.lat.toFixed(6)}, {location.coords.lng.toFixed(6)})
               </span>
             </p>
           )}
-          <p className="panel-hint">
-            설정하지 않으면 <strong>현재 위치</strong>를 사용해요.
-          </p>
+          <p className="panel-hint">{t.locationHint}</p>
         </section>
       )}
 
       {activePanel === 'time' && (
-        <section className="card" aria-label="자투리 시간 설정">
-          <div className="preset-group" role="group" aria-label="시간 프리셋">
+        <section className="card" aria-label={t.timePanelLabel}>
+          <div className="preset-group" role="group" aria-label={t.timePresetGroupLabel}>
             {TIME_PRESETS.map((preset) => (
               <button
                 key={preset}
@@ -401,12 +403,12 @@ export default function HomePage() {
                 onClick={() => handleSelectTime(preset)}
                 aria-pressed={availableMinutes === preset}
               >
-                {preset}분
+                {preset}{t.minutesSuffix}
               </button>
             ))}
           </div>
           <label className="slider-label">
-            직접 조절: <strong>{formatMinutes(availableMinutes)}</strong>
+            {t.adjustTime}<strong>{formatMinutes(availableMinutes)}</strong>
             <input
               type="range"
               min={10}
@@ -415,18 +417,16 @@ export default function HomePage() {
               value={availableMinutes}
               onChange={(e) => handleChangeTime(Number(e.target.value))}
               className="slider"
-              aria-label="자투리 시간(분)"
+              aria-label={t.timeSliderLabel}
             />
           </label>
-          <p className="panel-hint">
-            설정하지 않으면 <strong>3시간</strong>을 사용해요.
-          </p>
+          <p className="panel-hint">{t.timeHint}</p>
         </section>
       )}
 
       {activePanel === 'mode' && (
-        <section className="card" aria-label="이동 수단 설정">
-          <div className="preset-group" role="group" aria-label="이동 수단">
+        <section className="card" aria-label={t.modePanelLabel}>
+          <div className="preset-group" role="group" aria-label={t.modeGroupLabel}>
             {MODE_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
@@ -435,19 +435,17 @@ export default function HomePage() {
                 onClick={() => handleSelectMode(opt.value)}
                 aria-pressed={mode === opt.value}
               >
-                {opt.icon} {opt.label}
+                {opt.icon} {MODE_LABELS[opt.value]}
               </button>
             ))}
           </div>
-          <p className="panel-hint">
-            설정하지 않으면 <strong>대중교통</strong>을 사용해요.
-          </p>
+          <p className="panel-hint">{t.modeHint}</p>
         </section>
       )}
 
       {activePanel === 'mbti' && (
-        <section className="card" aria-label="MBTI 선택">
-          <div className="mbti-grid" role="group" aria-label="MBTI 유형">
+        <section className="card" aria-label={t.mbtiPanelLabel}>
+          <div className="mbti-grid" role="group" aria-label={t.mbtiGroupLabel}>
             {MBTI_OPTIONS.map((type) => (
               <button
                 key={type}
@@ -460,47 +458,45 @@ export default function HomePage() {
               </button>
             ))}
           </div>
-          <p className="panel-hint">
-            선택 사항이에요. 성향에 맞는 여행지를 곧 추천해 드릴게요.
-          </p>
+          <p className="panel-hint">{t.mbtiHint}</p>
         </section>
       )}
 
       {activePanel === 'luckyDay' && (
-        <section className="card" aria-label="럭키데이 정보 입력">
+        <section className="card" aria-label={t.luckyDayPanelLabel}>
           <div className="lucky-form">
             <label className="lucky-field">
-              <span className="lucky-field__label">생년월일</span>
+              <span className="lucky-field__label">{t.birthDate}</span>
               <input
                 type="date"
                 className="input"
                 value={birthDate}
                 onChange={(e) => setBirthDate(e.target.value)}
-                aria-label="생년월일"
+                aria-label={t.birthDate}
               />
             </label>
 
             <label className="lucky-field">
-              <span className="lucky-field__label">태어난 시각 (선택)</span>
+              <span className="lucky-field__label">{t.birthTime}</span>
               <input
                 type="time"
                 className="input"
                 value={birthTime}
                 onChange={(e) => setBirthTime(e.target.value)}
-                aria-label="태어난 시각"
+                aria-label={t.birthTime}
               />
             </label>
 
             <div className="lucky-field">
-              <span className="lucky-field__label">달력</span>
-              <div className="preset-group" role="group" aria-label="양력/음력">
+              <span className="lucky-field__label">{t.calendar}</span>
+              <div className="preset-group" role="group" aria-label={t.calendar}>
                 <button
                   type="button"
                   className={`chip ${calendar === 'solar' ? 'chip--active' : ''}`}
                   onClick={() => setCalendar('solar')}
                   aria-pressed={calendar === 'solar'}
                 >
-                  양력
+                  {t.calendarSolar}
                 </button>
                 <button
                   type="button"
@@ -508,21 +504,21 @@ export default function HomePage() {
                   onClick={() => setCalendar('lunar')}
                   aria-pressed={calendar === 'lunar'}
                 >
-                  음력
+                  {t.calendarLunar}
                 </button>
               </div>
             </div>
 
             <div className="lucky-field">
-              <span className="lucky-field__label">성별</span>
-              <div className="preset-group" role="group" aria-label="성별">
+              <span className="lucky-field__label">{t.gender}</span>
+              <div className="preset-group" role="group" aria-label={t.gender}>
                 <button
                   type="button"
                   className={`chip ${gender === 'female' ? 'chip--active' : ''}`}
                   onClick={() => setGender('female')}
                   aria-pressed={gender === 'female'}
                 >
-                  여성
+                  {t.genderFemale}
                 </button>
                 <button
                   type="button"
@@ -530,7 +526,7 @@ export default function HomePage() {
                   onClick={() => setGender('male')}
                   aria-pressed={gender === 'male'}
                 >
-                  남성
+                  {t.genderMale}
                 </button>
               </div>
             </div>
@@ -542,7 +538,7 @@ export default function HomePage() {
                 onClick={handleSaveLuckyDay}
                 disabled={!birthDate}
               >
-                저장
+                {t.save}
               </button>
               {luckyDay && (
                 <button
@@ -550,14 +546,12 @@ export default function HomePage() {
                   className="btn"
                   onClick={handleClearLuckyDay}
                 >
-                  초기화
+                  {t.reset}
                 </button>
               )}
             </div>
           </div>
-          <p className="panel-hint">
-            선택 사항이에요. 오늘의 운세에 맞는 여행지를 곧 추천해 드릴게요.
-          </p>
+          <p className="panel-hint">{t.luckyDayHint}</p>
         </section>
       )}
 
@@ -573,7 +567,7 @@ export default function HomePage() {
         onClick={handleSubmit}
         disabled={submitting}
       >
-        {submitting ? '설레는 곳 찾는 중…' : '✨ 지금 떠나볼까요?'}
+        {submitting ? t.submitLoading : t.submitIdle}
       </button>
     </main>
   );

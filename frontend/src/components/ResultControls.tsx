@@ -1,3 +1,5 @@
+import { useI18n } from '../i18n/LanguageContext';
+
 export type SortKey = 'travelMinutes' | 'distanceKm';
 
 interface ResultControlsProps {
@@ -16,17 +18,19 @@ export default function ResultControls({
   activeCategory,
   onCategoryChange,
 }: ResultControlsProps) {
+  const { t } = useI18n();
+
   return (
     <div className="result-controls">
-      <div className="result-controls__row" role="group" aria-label="정렬 기준">
-        <span className="result-controls__label">정렬</span>
+      <div className="result-controls__row" role="group" aria-label={t.sortGroupLabel}>
+        <span className="result-controls__label">{t.sortLabel}</span>
         <button
           type="button"
           className={`chip ${sortKey === 'travelMinutes' ? 'chip--active' : ''}`}
           onClick={() => onSortChange('travelMinutes')}
           aria-pressed={sortKey === 'travelMinutes'}
         >
-          이동시간순
+          {t.sortByTime}
         </button>
         <button
           type="button"
@@ -34,7 +38,7 @@ export default function ResultControls({
           onClick={() => onSortChange('distanceKm')}
           aria-pressed={sortKey === 'distanceKm'}
         >
-          거리순
+          {t.sortByDistance}
         </button>
       </div>
 
@@ -42,16 +46,16 @@ export default function ResultControls({
         <div
           className="result-controls__row"
           role="group"
-          aria-label="카테고리 필터"
+          aria-label={t.categoryFilterLabel}
         >
-          <span className="result-controls__label">종류</span>
+          <span className="result-controls__label">{t.categoryLabel}</span>
           <button
             type="button"
             className={`chip ${activeCategory === null ? 'chip--active' : ''}`}
             onClick={() => onCategoryChange(null)}
             aria-pressed={activeCategory === null}
           >
-            전체
+            {t.categoryAll}
           </button>
           {categories.map((cat) => (
             <button

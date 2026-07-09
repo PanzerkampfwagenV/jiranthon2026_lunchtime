@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
 import { SearchProvider } from './store/SearchContext'
+import { LanguageProvider } from './i18n/LanguageContext'
 import {
   APP_SETTINGS,
   applyGlassmorphismSettings,
@@ -18,9 +19,11 @@ applyTheme(getStoredTheme() ?? APP_SETTINGS.theme)
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
-      <SearchProvider>
-        <App />
-      </SearchProvider>
+      <LanguageProvider>
+        <SearchProvider>
+          <App />
+        </SearchProvider>
+      </LanguageProvider>
     </BrowserRouter>
   </StrictMode>,
 )

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import type { LatLng, Place, PlaceDetailInfo } from '../types';
 import { fetchPlaceDetail } from '../api/placeDetail';
+import { useI18n } from '../i18n/LanguageContext';
 
 interface PlaceDetailModalProps {
   place: Place | null;
@@ -18,6 +19,7 @@ export default function PlaceDetailModal({
   const closeRef = useRef<HTMLButtonElement>(null);
   const [detail, setDetail] = useState<PlaceDetailInfo | null>(null);
   const [loading, setLoading] = useState(false);
+  const { t } = useI18n();
 
   // ESC로 닫기 + 열릴 때 닫기 버튼에 포커스
   useEffect(() => {
@@ -55,7 +57,7 @@ export default function PlaceDetailModal({
 
   // 카카오맵 길찾기 딥링크 (출발지 → 도착지)
   const directionsUrl = origin
-    ? `https://map.kakao.com/link/from/출발지,${origin.lat},${origin.lng}/to/${encodeURIComponent(
+    ? `https://map.kakao.com/link/from/${encodeURIComponent(t.mapOriginTitle)},${origin.lat},${origin.lng}/to/${encodeURIComponent(
         place.name,
       )},${place.lat},${place.lng}`
     : `https://map.kakao.com/link/to/${encodeURIComponent(place.name)},${place.lat},${place.lng}`;
@@ -74,7 +76,7 @@ export default function PlaceDetailModal({
           type="button"
           className="modal__close"
           onClick={onClose}
-          aria-label="닫기"
+          aria-label={t.closeLabel}
         >
           ✕
         </button>
@@ -85,7 +87,7 @@ export default function PlaceDetailModal({
           {place.name}
         </h2>
         <p className="modal__meta">
-          {place.category} · 약 {place.travelMinutes}분 · {place.distanceKm}km
+          {place.category} · {t.approxPrefix}{place.travelMinutes}{t.minuteUnit} · {place.distanceKm}km
         </p>
         {place.description && (
           <p className="modal__desc">{place.description}</p>
@@ -93,7 +95,7 @@ export default function PlaceDetailModal({
 
         {loading && (
           <p className="modal__loading" role="status">
-            AI가 상세 정보를 준비하고 있어요…
+            {t.detailLoading}
           </p>
         )}
 
@@ -103,7 +105,7 @@ export default function PlaceDetailModal({
 
         {!loading && detail && detail.activities.length > 0 && (
           <div className="modal__section">
-            <h3 className="modal__section-title">할 수 있는 활동</h3>
+            <h3 className="modal__section-title">{t.activitiesTitle}</h3>
             <ul className="modal__tag-list">
               {detail.activities.map((a) => (
                 <li key={a} className="modal__tag">
@@ -116,7 +118,7 @@ export default function PlaceDetailModal({
 
         {!loading && detail && detail.highlights.length > 0 && (
           <div className="modal__section">
-            <h3 className="modal__section-title">이런 게 유명해요</h3>
+            <h3 className="modal__section-title">{t.highlightsTitle}</h3>
             <ul className="modal__tag-list">
               {detail.highlights.map((h) => (
                 <li key={h} className="modal__tag modal__tag--highlight">
@@ -133,7 +135,7 @@ export default function PlaceDetailModal({
           target="_blank"
           rel="noopener noreferrer"
         >
-          카카오맵에서 길찾기 →
+          {t.directionsButton}
         </a>
       </div>
     </div>

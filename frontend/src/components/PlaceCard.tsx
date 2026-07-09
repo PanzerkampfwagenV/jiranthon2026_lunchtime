@@ -1,4 +1,5 @@
 import type { Place } from '../types';
+import { useI18n } from '../i18n/LanguageContext';
 
 interface PlaceCardProps {
   place: Place;
@@ -23,6 +24,8 @@ export default function PlaceCard({
   onOpenDetail,
   liveRoute,
 }: PlaceCardProps) {
+  const { t } = useI18n();
+
   return (
     <li
       className={`card result-item ${active ? 'result-item--active' : ''}`}
@@ -50,9 +53,9 @@ export default function PlaceCard({
           <p className="result-item__meta">
             {place.category} ·{' '}
             {liveRoute && liveRoute.isActualRoute ? (
-              <>실제 약 {liveRoute.durationMinutes}분</>
+              <>{t.actualApproxPrefix}{liveRoute.durationMinutes}{t.minuteUnit}</>
             ) : (
-              <>약 {place.travelMinutes}분</>
+              <>{t.approxPrefix}{place.travelMinutes}{t.minuteUnit}</>
             )}{' '}
             · {place.distanceKm}km
           </p>
@@ -67,7 +70,7 @@ export default function PlaceCard({
           className="result-item__detail-btn"
           onClick={() => onOpenDetail(place)}
         >
-          상세 보기
+          {t.detailButton}
         </button>
       )}
     </li>
