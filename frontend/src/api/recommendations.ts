@@ -63,7 +63,19 @@ export async function fetchRecommendations(
   });
 
   if (!res.ok) {
-    throw new Error(`추천 요청 실패: ${res.status}`);
+    // 백엔드 에러 규격: { error: { code, message } }
+    const body = (await res.json().catch(() => null)) as {
+      error?: { code?: string; message?: string };
+    } | null;
+    const code = body?.error?.code;
+
+    // 도달 가능한 장소가 없는 경우: Mock 모드와 동일하게 빈 결과로 처리해
+    // 결과 화면의 "조건에 맞는 장소가 없어요" 빈 상태 UI를 보여준다.
+    if (code === 'NO_RESULT') {
+      return { places: [] };
+    }
+
+    throw new Error(body?.error?.message ?? `추천 요청 실패: ${res.status}`);
   }
 
   return (await res.json()) as RecommendationResponse;
