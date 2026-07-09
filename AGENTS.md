@@ -16,6 +16,10 @@ Split commits into logical units. Do not lump unrelated changes into a single co
 
 Write commit messages in Korean whenever possible, using language that a mid-level IT engineer can understand.
 
+## Documentation Convention
+
+When writing Markdown documents, make full use of Mermaid diagrams so that humans can understand the content easily. Prefer diagrams (flowcharts, sequence diagrams, etc.) over long prose when explaining flows, architecture, or relationships.
+
 ## Devlog Convention
 
 Record development progress under `docs/devlog/` after major work is completed and committed.
