@@ -1,5 +1,5 @@
 // 자투리 시간 여행 추천 - 공용 타입 정의
-// docs/TASKS.md 의 API 계약 초안 기준
+// docs/product-requirements.md 의 3. API 계약(Contract) 기준
 
 /** 위도/경도 좌표 */
 export interface LatLng {

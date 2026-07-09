@@ -5,7 +5,7 @@
 ## 저장소 구조
 
 - `frontend/` — React + TypeScript + Vite 프론트엔드
-- `docs/` — 기획/작업 문서 (PRD, TASKS, planning, devlog, 진행 대시보드)
+- `docs/` — 기획/작업 문서 (제품 요구사항, 작업 체크리스트, planning, devlog, 진행 대시보드)
 
 백엔드(`backend/`)는 개발자 C가 추후 추가할 예정입니다.
 
@@ -23,7 +23,7 @@ npm run dev
 
 ## 문서
 
-- 제품 요구사항: [docs/PRD.md](docs/PRD.md)
-- 작업 리스트: [docs/TASKS.md](docs/TASKS.md)
+- 제품 요구사항 (무엇을·왜): [docs/product-requirements.md](docs/product-requirements.md)
+- 작업 체크리스트 (어디까지): [docs/task-checklist.md](docs/task-checklist.md)
 - 진행 대시보드: [docs/dashboard/index.html](docs/dashboard/index.html)
 - 개발 로그: [docs/devlog/](docs/devlog/)
