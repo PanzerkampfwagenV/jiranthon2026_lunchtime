@@ -25,7 +25,9 @@ const SearchContext = createContext<SearchState | undefined>(undefined);
 
 export function SearchProvider({ children }: { children: ReactNode }) {
   const [location, setLocation] = useState<SelectedLocation | null>(null);
-  const [availableMinutes, setAvailableMinutes] = useState<number>(60);
+  // 기본값: 자투리 시간 3시간(180분)
+  const [availableMinutes, setAvailableMinutes] = useState<number>(180);
+  // 기본값: 대중교통
   const [mode, setMode] = useState<TravelMode>('transit');
   const [places, setPlaces] = useState<Place[]>([]);
 

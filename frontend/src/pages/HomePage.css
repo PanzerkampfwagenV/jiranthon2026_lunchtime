@@ -60,6 +60,51 @@
   margin: 0 0 0.85rem;
 }
 
+.hashtags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.hashtag {
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, var(--glass-button-chip-opacity, 0.35));
+  color: inherit;
+  border-radius: 999px;
+  padding: 0.5rem 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  -webkit-backdrop-filter: blur(12px) saturate(1.4);
+  backdrop-filter: blur(12px) saturate(1.4);
+}
+
+.hashtag:active {
+  transform: scale(0.96);
+}
+
+/* 사용자가 기본값에서 직접 변경한 해시태그 강조 */
+.hashtag--set {
+  background: rgba(255, 107, 53, 0.85);
+  border-color: rgba(255, 107, 53, 0.9);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(255, 107, 53, 0.35);
+}
+
+/* 현재 펼쳐진 해시태그 표시 */
+.hashtag--open {
+  border-color: rgba(255, 107, 53, 0.9);
+  box-shadow: 0 0 0 2px rgba(255, 107, 53, 0.4);
+}
+
+.panel-hint {
+  margin: 0.85rem 0 0;
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
 .location-actions {
   display: flex;
   flex-direction: column;

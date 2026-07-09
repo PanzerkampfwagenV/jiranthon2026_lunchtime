@@ -35,6 +35,23 @@ const THEME_ICONS: Record<ThemeMode, string> = {
   dark: '🌙',
 };
 
+type PanelKey = 'location' | 'time' | 'mode';
+
+const MODE_LABELS: Record<TravelMode, string> = {
+  walking: '도보',
+  transit: '대중교통',
+  driving: '자동차',
+};
+
+// 분 단위를 "3시간", "1시간 30분", "45분" 형태로 표현.
+function formatMinutes(minutes: number): string {
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (h > 0 && m > 0) return `${h}시간 ${m}분`;
+  if (h > 0) return `${h}시간`;
+  return `${m}분`;
+}
+
 export default function HomePage() {
   const navigate = useNavigate();
   const {
@@ -59,9 +76,21 @@ export default function HomePage() {
   const [manualLabel, setManualLabel] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // 현재 펼쳐진 설정 패널. null이면 모두 접힌 상태.
+  const [activePanel, setActivePanel] = useState<PanelKey | null>(null);
+  // 사용자가 기본값에서 직접 바꾼 항목 추적 → 해시태그 강조에 사용.
+  const [customized, setCustomized] = useState<Record<PanelKey, boolean>>({
+    location: false,
+    time: false,
+    mode: false,
+  });
   const [theme, setTheme] = useState<ThemeMode>(
     () => getStoredTheme() ?? APP_SETTINGS.theme,
   );
+
+  const togglePanel = (key: PanelKey) => {
+    setActivePanel((prev) => (prev === key ? null : key));
+  };
 
   const handleThemeChange = (next: ThemeMode) => {
     setTheme(next);
@@ -76,6 +105,7 @@ export default function HomePage() {
       setLocation({ coords, label: '현재 위치', fromGps: true });
       setManualLabel('');
       clearSuggestions();
+      setCustomized((prev) => ({ ...prev, location: true }));
     } catch (err) {
       setError(err instanceof Error ? err.message : '위치를 가져오지 못했습니다.');
     }
@@ -97,6 +127,7 @@ export default function HomePage() {
     setLocation({ coords, label: name, fromGps: false });
     setManualLabel(name);
     clearSuggestions();
+    setCustomized((prev) => ({ ...prev, location: true }));
   };
 
   // SDK 미사용(키 없음) 시 폴백: 라벨만 입력받고 좌표는 서울시청으로 임시 지정.
@@ -108,21 +139,37 @@ export default function HomePage() {
       label: trimmed,
       fromGps: false,
     });
+    setCustomized((prev) => ({ ...prev, location: true }));
   };
 
-  const canSubmit =
-    location !== null && availableMinutes > 0 && !submitting;
+  const handleSelectTime = (preset: number) => {
+    setAvailableMinutes(preset);
+    setCustomized((prev) => ({ ...prev, time: true }));
+  };
+
+  const handleChangeTime = (minutes: number) => {
+    setAvailableMinutes(minutes);
+    setCustomized((prev) => ({ ...prev, time: true }));
+  };
+
+  const handleSelectMode = (next: TravelMode) => {
+    setMode(next);
+    setCustomized((prev) => ({ ...prev, mode: true }));
+  };
 
   const handleSubmit = async () => {
-    if (!location) {
-      setError('먼저 위치를 선택해 주세요.');
-      return;
-    }
     setError(null);
     setSubmitting(true);
     try {
+      // 위치를 선택하지 않았으면 기본값으로 현재 위치를 사용한다.
+      let effectiveLocation = location;
+      if (!effectiveLocation) {
+        const coords = await requestLocation();
+        effectiveLocation = { coords, label: '현재 위치', fromGps: true };
+        setLocation(effectiveLocation);
+      }
       const { places } = await fetchRecommendations({
-        location: location.coords,
+        location: effectiveLocation.coords,
         availableMinutes,
         mode,
       });
@@ -164,133 +211,172 @@ export default function HomePage() {
         </p>
       </header>
 
-      <section className="card" aria-labelledby="location-heading">
-        <h2 id="location-heading" className="card__heading">
-          1. 위치
-        </h2>
-        <div className="location-actions">
-          <button
-            type="button"
-            className="btn btn--primary"
-            onClick={handleUseGps}
-            disabled={gpsLoading}
-          >
-            {gpsLoading ? '위치 확인 중…' : '📍 현재 위치 사용'}
-          </button>
-          <div className="location-manual">
-            <input
-              type="text"
-              className="input"
-              placeholder={
-                searchAvailable ? '장소/주소 검색' : '장소/주소 직접 입력'
-              }
-              value={manualLabel}
-              onChange={(e) => handleManualChange(e.target.value)}
-              aria-label="장소 또는 주소 검색"
-              role="combobox"
-              aria-expanded={suggestions.length > 0}
-              aria-autocomplete="list"
-              autoComplete="off"
-            />
-            {!searchAvailable && (
-              <button
-                type="button"
-                className="btn"
-                onClick={handleManualConfirm}
-                disabled={!manualLabel.trim()}
-              >
-                확인
-              </button>
+      <nav className="hashtags" aria-label="검색 조건 설정">
+        <button
+          type="button"
+          className={`hashtag ${activePanel === 'location' ? 'hashtag--open' : ''} ${
+            customized.location ? 'hashtag--set' : ''
+          }`}
+          onClick={() => togglePanel('location')}
+          aria-expanded={activePanel === 'location'}
+        >
+          #위치{location ? `·${location.label}` : ''}
+        </button>
+        <button
+          type="button"
+          className={`hashtag ${activePanel === 'time' ? 'hashtag--open' : ''} ${
+            customized.time ? 'hashtag--set' : ''
+          }`}
+          onClick={() => togglePanel('time')}
+          aria-expanded={activePanel === 'time'}
+        >
+          #자투리·{formatMinutes(availableMinutes)}
+        </button>
+        <button
+          type="button"
+          className={`hashtag ${activePanel === 'mode' ? 'hashtag--open' : ''} ${
+            customized.mode ? 'hashtag--set' : ''
+          }`}
+          onClick={() => togglePanel('mode')}
+          aria-expanded={activePanel === 'mode'}
+        >
+          #이동수단·{MODE_LABELS[mode]}
+        </button>
+      </nav>
+
+      {activePanel === 'location' && (
+        <section className="card" aria-label="위치 설정">
+          <div className="location-actions">
+            <button
+              type="button"
+              className="btn btn--primary"
+              onClick={handleUseGps}
+              disabled={gpsLoading}
+            >
+              {gpsLoading ? '위치 확인 중…' : '📍 현재 위치 사용'}
+            </button>
+            <div className="location-manual">
+              <input
+                type="text"
+                className="input"
+                placeholder={
+                  searchAvailable ? '장소/주소 검색' : '장소/주소 직접 입력'
+                }
+                value={manualLabel}
+                onChange={(e) => handleManualChange(e.target.value)}
+                aria-label="장소 또는 주소 검색"
+                role="combobox"
+                aria-expanded={suggestions.length > 0}
+                aria-autocomplete="list"
+                autoComplete="off"
+              />
+              {!searchAvailable && (
+                <button
+                  type="button"
+                  className="btn"
+                  onClick={handleManualConfirm}
+                  disabled={!manualLabel.trim()}
+                >
+                  확인
+                </button>
+              )}
+            </div>
+
+            {searchAvailable && (searchLoading || suggestions.length > 0) && (
+              <ul className="suggestion-list" role="listbox">
+                {searchLoading && (
+                  <li className="suggestion-empty">검색 중…</li>
+                )}
+                {!searchLoading &&
+                  suggestions.map((s) => (
+                    <li key={s.id} role="option" aria-selected={false}>
+                      <button
+                        type="button"
+                        className="suggestion-item"
+                        onClick={() => handleSelectSuggestion(s.name, s.coords)}
+                      >
+                        <span className="suggestion-name">{s.name}</span>
+                        <span className="suggestion-addr">{s.address}</span>
+                      </button>
+                    </li>
+                  ))}
+              </ul>
+            )}
+
+            {searchError && (
+              <p className="error" role="alert">
+                {searchError}
+              </p>
             )}
           </div>
-
-          {searchAvailable && (searchLoading || suggestions.length > 0) && (
-            <ul className="suggestion-list" role="listbox">
-              {searchLoading && (
-                <li className="suggestion-empty">검색 중…</li>
-              )}
-              {!searchLoading &&
-                suggestions.map((s) => (
-                  <li key={s.id} role="option" aria-selected={false}>
-                    <button
-                      type="button"
-                      className="suggestion-item"
-                      onClick={() => handleSelectSuggestion(s.name, s.coords)}
-                    >
-                      <span className="suggestion-name">{s.name}</span>
-                      <span className="suggestion-addr">{s.address}</span>
-                    </button>
-                  </li>
-                ))}
-            </ul>
-          )}
-
-          {searchError && (
-            <p className="error" role="alert">
-              {searchError}
+          {location && (
+            <p className="location-selected" role="status">
+              선택된 위치: <strong>{location.label}</strong>{' '}
+              <span className="location-coords">
+                ({location.coords.lat.toFixed(6)}, {location.coords.lng.toFixed(6)})
+              </span>
             </p>
           )}
-        </div>
-        {location && (
-          <p className="location-selected" role="status">
-            선택된 위치: <strong>{location.label}</strong>{' '}
-            <span className="location-coords">
-              ({location.coords.lat.toFixed(6)}, {location.coords.lng.toFixed(6)})
-            </span>
+          <p className="panel-hint">
+            설정하지 않으면 <strong>현재 위치</strong>를 사용해요.
           </p>
-        )}
-      </section>
+        </section>
+      )}
 
-      <section className="card" aria-labelledby="time-heading">
-        <h2 id="time-heading" className="card__heading">
-          2. 자투리 시간
-        </h2>
-        <div className="preset-group" role="group" aria-label="시간 프리셋">
-          {TIME_PRESETS.map((preset) => (
-            <button
-              key={preset}
-              type="button"
-              className={`chip ${availableMinutes === preset ? 'chip--active' : ''}`}
-              onClick={() => setAvailableMinutes(preset)}
-              aria-pressed={availableMinutes === preset}
-            >
-              {preset}분
-            </button>
-          ))}
-        </div>
-        <label className="slider-label">
-          직접 조절: <strong>{availableMinutes}분</strong>
-          <input
-            type="range"
-            min={10}
-            max={180}
-            step={5}
-            value={availableMinutes}
-            onChange={(e) => setAvailableMinutes(Number(e.target.value))}
-            className="slider"
-            aria-label="자투리 시간(분)"
-          />
-        </label>
-      </section>
+      {activePanel === 'time' && (
+        <section className="card" aria-label="자투리 시간 설정">
+          <div className="preset-group" role="group" aria-label="시간 프리셋">
+            {TIME_PRESETS.map((preset) => (
+              <button
+                key={preset}
+                type="button"
+                className={`chip ${availableMinutes === preset ? 'chip--active' : ''}`}
+                onClick={() => handleSelectTime(preset)}
+                aria-pressed={availableMinutes === preset}
+              >
+                {preset}분
+              </button>
+            ))}
+          </div>
+          <label className="slider-label">
+            직접 조절: <strong>{formatMinutes(availableMinutes)}</strong>
+            <input
+              type="range"
+              min={10}
+              max={180}
+              step={5}
+              value={availableMinutes}
+              onChange={(e) => handleChangeTime(Number(e.target.value))}
+              className="slider"
+              aria-label="자투리 시간(분)"
+            />
+          </label>
+          <p className="panel-hint">
+            설정하지 않으면 <strong>3시간</strong>을 사용해요.
+          </p>
+        </section>
+      )}
 
-      <section className="card" aria-labelledby="mode-heading">
-        <h2 id="mode-heading" className="card__heading">
-          3. 이동 수단
-        </h2>
-        <div className="preset-group" role="group" aria-label="이동 수단">
-          {MODE_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              type="button"
-              className={`chip ${mode === opt.value ? 'chip--active' : ''}`}
-              onClick={() => setMode(opt.value)}
-              aria-pressed={mode === opt.value}
-            >
-              {opt.icon} {opt.label}
-            </button>
-          ))}
-        </div>
-      </section>
+      {activePanel === 'mode' && (
+        <section className="card" aria-label="이동 수단 설정">
+          <div className="preset-group" role="group" aria-label="이동 수단">
+            {MODE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                className={`chip ${mode === opt.value ? 'chip--active' : ''}`}
+                onClick={() => handleSelectMode(opt.value)}
+                aria-pressed={mode === opt.value}
+              >
+                {opt.icon} {opt.label}
+              </button>
+            ))}
+          </div>
+          <p className="panel-hint">
+            설정하지 않으면 <strong>대중교통</strong>을 사용해요.
+          </p>
+        </section>
+      )}
 
       {error && (
         <p className="error" role="alert">
@@ -302,9 +388,9 @@ export default function HomePage() {
         type="button"
         className="btn btn--primary btn--full"
         onClick={handleSubmit}
-        disabled={!canSubmit}
+        disabled={submitting}
       >
-        {submitting ? '추천 찾는 중…' : '추천 받기'}
+        {submitting ? '설레는 곳 찾는 중…' : '✨ 지금 떠나볼까요?'}
       </button>
     </main>
   );
