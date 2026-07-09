@@ -55,3 +55,15 @@ export interface RouteResult {
   /** 실제 도로 경로를 가져왔는지 여부 (false면 직선 대체) */
   isActualRoute: boolean;
 }
+
+/** GET /api/place-detail 응답: LLM 기반 장소 상세 정보 */
+export interface PlaceDetailInfo {
+  /** 이곳에서 할 수 있는 활동 목록 */
+  activities: string[];
+  /** 유명한 것/포토스팟 등 하이라이트 */
+  highlights: string[];
+  /** 상세 소개 */
+  summary: string;
+  /** LLM으로 생성됐는지 여부 (false면 정적 폴백) */
+  generated: boolean;
+}
