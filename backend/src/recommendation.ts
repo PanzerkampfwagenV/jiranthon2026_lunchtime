@@ -123,6 +123,16 @@ async function resolveLlmPlaces(
         if (!kakao) return null;
 
         const distanceKm = haversineKm(location, kakao.location);
+
+        // LLM이 출발지 자체(또는 출발지와 사실상 같은 지점)를 추천 장소로
+        // 다시 제안하는 경우가 있다(예: 출발지가 "OO역"일 때 "OO역"을 추천).
+        // 이동거리가 사실상 0이면 "자투리 시간 내 다녀올 곳"이라는 취지에
+        // 맞지 않으므로 제외한다.
+        const MIN_DISTANCE_KM = 0.1;
+        if (distanceKm < MIN_DISTANCE_KM) {
+          return null;
+        }
+
         const travelMinutes = estimateTravelMinutes(distanceKm, mode);
         const requiredMinutes = isRoundtrip
           ? travelMinutes * 2
