@@ -1,0 +1,96 @@
+import { AppError } from './errors.js';
+import type {
+  LatLng,
+  RecommendationRequest,
+  TravelMode,
+  TripType,
+} from './types.js';
+
+const VALID_MODES: TravelMode[] = ['walking', 'transit', 'driving'];
+const VALID_TRIP_TYPES: TripType[] = ['oneway', 'roundtrip'];
+
+/** availableMinutes 허용 범위 (프론트 입력 UI: 10~180분) */
+const MIN_AVAILABLE_MINUTES = 10;
+const MAX_AVAILABLE_MINUTES = 180;
+
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
+function parseLocation(raw: unknown): LatLng {
+  if (typeof raw !== 'object' || raw === null) {
+    throw AppError.invalidInput('location은 필수입니다.');
+  }
+  const { lat, lng } = raw as Record<string, unknown>;
+  if (!isFiniteNumber(lat) || !isFiniteNumber(lng)) {
+    throw AppError.invalidInput('location.lat, location.lng는 숫자여야 합니다.');
+  }
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    throw AppError.invalidInput('location 좌표 범위가 올바르지 않습니다.');
+  }
+  return { lat, lng };
+}
+
+/** 요청 본문을 검증하고 정규화된 RecommendationRequest로 변환한다. */
+export function parseRecommendationRequest(
+  body: unknown,
+): RecommendationRequest {
+  if (typeof body !== 'object' || body === null) {
+    throw AppError.invalidInput('요청 본문이 올바르지 않습니다.');
+  }
+
+  const { location, availableMinutes, mode, tags, tripType } =
+    body as Record<string, unknown>;
+
+  const parsedLocation = parseLocation(location);
+
+  if (!isFiniteNumber(availableMinutes)) {
+    throw AppError.invalidInput('availableMinutes는 필수입니다.');
+  }
+  if (
+    availableMinutes < MIN_AVAILABLE_MINUTES ||
+    availableMinutes > MAX_AVAILABLE_MINUTES
+  ) {
+    throw AppError.invalidInput(
+      `availableMinutes는 ${MIN_AVAILABLE_MINUTES}~${MAX_AVAILABLE_MINUTES} 범위여야 합니다.`,
+    );
+  }
+
+  if (typeof mode !== 'string' || !VALID_MODES.includes(mode as TravelMode)) {
+    throw AppError.invalidInput(
+      `mode는 ${VALID_MODES.join(', ')} 중 하나여야 합니다.`,
+    );
+  }
+
+  let parsedTags: string[] | undefined;
+  if (tags !== undefined) {
+    if (
+      !Array.isArray(tags) ||
+      !tags.every((t): t is string => typeof t === 'string')
+    ) {
+      throw AppError.invalidInput('tags는 문자열 배열이어야 합니다.');
+    }
+    parsedTags = tags;
+  }
+
+  let parsedTripType: TripType = 'roundtrip';
+  if (tripType !== undefined) {
+    if (
+      typeof tripType !== 'string' ||
+      !VALID_TRIP_TYPES.includes(tripType as TripType)
+    ) {
+      throw AppError.invalidInput(
+        `tripType은 ${VALID_TRIP_TYPES.join(', ')} 중 하나여야 합니다.`,
+      );
+    }
+    parsedTripType = tripType as TripType;
+  }
+
+  return {
+    location: parsedLocation,
+    availableMinutes,
+    mode: mode as TravelMode,
+    tags: parsedTags,
+    tripType: parsedTripType,
+  };
+}
