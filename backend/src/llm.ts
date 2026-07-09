@@ -141,6 +141,12 @@ function parseSuggestions(text: string): LlmSuggestion[] {
     try {
       parsed = JSON.parse(repaired);
     } catch {
+      // 최후 수단: name/category 키만 정규식으로 추출한다.
+      // (Claude가 description 키를 빠뜨리는 등 JSON이 깨져도 장소명은 건진다)
+      const salvaged = salvageByRegex(text);
+      if (salvaged.length > 0) {
+        return salvaged;
+      }
       console.error('[llm] JSON 파싱 실패. 원본 응답:', text.slice(0, 500));
       throw new Error('LLM 응답 JSON 파싱 실패');
     }
@@ -169,6 +175,26 @@ function parseSuggestions(text: string): LlmSuggestion[] {
 
   if (result.length === 0) {
     throw new Error('LLM 응답에서 유효한 장소를 찾을 수 없습니다.');
+  }
+  return result;
+}
+
+/**
+ * JSON 파싱이 완전히 실패했을 때, name/category 값만 정규식으로 건진다.
+ * Claude가 description 키를 누락하는 등 형식이 깨져도 장소명은 확보한다.
+ */
+function salvageByRegex(text: string): LlmSuggestion[] {
+  const result: LlmSuggestion[] = [];
+  const seen = new Set<string>();
+  // "name": "..." 뒤에 오는 "category": "..." (있으면)을 함께 잡는다.
+  const re =
+    /"name"\s*:\s*"([^"]+)"(?:\s*,\s*"category"\s*:\s*"([^"]+)")?/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    const name = m[1].trim();
+    if (!name || seen.has(name)) continue;
+    seen.add(name);
+    result.push({ name, category: m[2]?.trim() || '장소', description: '' });
   }
   return result;
 }
