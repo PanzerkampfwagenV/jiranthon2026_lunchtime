@@ -51,3 +51,6 @@ out/
 .tmp/
 coverage/
 .user-agents.md
+
+# Dev server runtime (PID/로그)
+.run/
