@@ -24,6 +24,40 @@ interface KakaoApiResponse {
 
 const KAKAO_SEARCH_URL =
   'https://dapi.kakao.com/v2/local/search/keyword.json';
+const KAKAO_REGION_URL =
+  'https://dapi.kakao.com/v2/local/geo/coord2regioncode.json';
+
+interface RegionDocument {
+  region_1depth_name: string; // 시/도 (예: 경기)
+  region_2depth_name: string; // 시/군/구 (예: 성남시 분당구)
+  region_3depth_name: string; // 동/읍/면
+}
+
+/**
+ * 좌표를 행정구역명(예: "경기 성남시 분당구 삼평동")으로 변환한다.
+ * LLM이 출발지 지역을 정확히 인지하도록 프롬프트에 넣는 용도.
+ * 실패 시 null을 반환한다(치명적이지 않음).
+ */
+export async function reverseGeocode(origin: LatLng): Promise<string | null> {
+  const restKey = process.env.KAKAO_REST_API_KEY;
+  if (!restKey) return null;
+
+  const params = new URLSearchParams({
+    x: String(origin.lng),
+    y: String(origin.lat),
+  });
+  const res = await fetch(`${KAKAO_REGION_URL}?${params.toString()}`, {
+    headers: { Authorization: `KakaoAK ${restKey}` },
+  });
+  if (!res.ok) return null;
+
+  const data = (await res.json()) as { documents: RegionDocument[] };
+  const d = data.documents[0];
+  if (!d) return null;
+  return [d.region_1depth_name, d.region_2depth_name, d.region_3depth_name]
+    .filter(Boolean)
+    .join(' ');
+}
 
 /**
  * 카카오 로컬 키워드 검색으로 장소명을 실제 좌표로 변환한다.
@@ -33,31 +67,54 @@ const KAKAO_SEARCH_URL =
  */
 export async function searchPlace(
   keyword: string,
-  _origin?: LatLng,
+  origin?: LatLng,
 ): Promise<KakaoPlace | null> {
   const restKey = process.env.KAKAO_REST_API_KEY;
   if (!restKey) return null;
 
-  // 정확도(accuracy) 정렬로 여러 결과를 받아 대표 장소를 고른다.
-  // distance 정렬은 출발지 근처의 부속 시설(출구/요금소 등)을 잘못 잡는다.
+  // 1차: 출발지 중심 반경 20km 내에서 검색한다.
+  // 동명 장소(전국의 같은 이름)가 서울 등 먼 곳으로 잘못 매칭되는 것을 막는다.
+  if (origin) {
+    const nearby = await requestSearch(keyword, restKey, origin);
+    const picked = pickBestDocument(nearby, keyword);
+    if (picked) return toPlace(picked);
+  }
+
+  // 2차: 반경 내 결과가 없으면 전국(정확도순)에서 검색한다.
+  const all = await requestSearch(keyword, restKey);
+  const doc = pickBestDocument(all, keyword);
+  return doc ? toPlace(doc) : null;
+}
+
+/** 카카오 로컬 키워드 검색 요청. origin이 있으면 반경 20km로 한정한다. */
+async function requestSearch(
+  keyword: string,
+  restKey: string,
+  origin?: LatLng,
+): Promise<KakaoApiDocument[]> {
   const params = new URLSearchParams({
     query: keyword,
     size: '5',
     sort: 'accuracy',
   });
+  if (origin) {
+    params.set('x', String(origin.lng));
+    params.set('y', String(origin.lat));
+    params.set('radius', '20000'); // 20km
+  }
 
   const res = await fetch(`${KAKAO_SEARCH_URL}?${params.toString()}`, {
     headers: { Authorization: `KakaoAK ${restKey}` },
   });
-
   if (!res.ok) {
     throw new Error(`Kakao 장소 검색 실패: ${res.status}`);
   }
-
   const data = (await res.json()) as KakaoApiResponse;
-  const doc = pickBestDocument(data.documents, keyword);
-  if (!doc) return null;
+  return data.documents;
+}
 
+/** 카카오 문서를 내부 KakaoPlace 형태로 변환한다. */
+function toPlace(doc: KakaoApiDocument): KakaoPlace {
   return {
     name: doc.place_name,
     category: doc.category_group_name || doc.category_name || '장소',

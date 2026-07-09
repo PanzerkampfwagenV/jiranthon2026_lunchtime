@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>Geolocation 격리 테스트</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 24px; max-width: 640px; margin: 0 auto; }
+    button { font-size: 16px; padding: 10px 16px; cursor: pointer; }
+    pre { background: #111; color: #0f0; padding: 12px; border-radius: 6px; white-space: pre-wrap; word-break: break-all; }
+    .log-line { margin: 2px 0; }
+  </style>
+</head>
+<body>
+  <h1>Geolocation API 격리 테스트</h1>
+  <p>이 페이지는 프론트엔드 앱과 완전히 분리된 순수 HTML/JS로, <code>navigator.geolocation</code>만 단독으로 테스트합니다.</p>
+
+  <p>
+    <strong>현재 프로토콜/호스트:</strong> <span id="origin"></span><br />
+    <strong>geolocation 지원:</strong> <span id="support"></span><br />
+    <strong>permissions.query 결과:</strong> <span id="permission">확인 중…</span>
+  </p>
+
+  <button id="getOnce">getCurrentPosition 1회 호출</button>
+  <button id="watch">watchPosition 시작</button>
+  <button id="stopWatch" disabled>watchPosition 중지</button>
+  <button id="clearLog">로그 지우기</button>
+
+  <h2>로그</h2>
+  <pre id="log"></pre>
+
+  <script>
+    const logEl = document.getElementById('log');
+    const originEl = document.getElementById('origin');
+    const supportEl = document.getElementById('support');
+    const permissionEl = document.getElementById('permission');
+
+    function log(msg) {
+      const time = new Date().toLocaleTimeString();
+      logEl.textContent += `[${time}] ${msg}\n`;
+      console.log(msg);
+    }
+
+    originEl.textContent = `${location.protocol}//${location.host}`;
+    supportEl.textContent = 'geolocation' in navigator ? 'O' : 'X (미지원)';
+
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions
+        .query({ name: 'geolocation' })
+        .then((p) => {
+          permissionEl.textContent = p.state;
+          p.onchange = () => {
+            permissionEl.textContent = p.state;
+            log(`permission changed -> ${p.state}`);
+          };
+        })
+        .catch((e) => {
+          permissionEl.textContent = '조회 실패: ' + e.message;
+        });
+    } else {
+      permissionEl.textContent = 'permissions API 미지원';
+    }
+
+    function describeError(err) {
+      const codeNames = { 1: 'PERMISSION_DENIED', 2: 'POSITION_UNAVAILABLE', 3: 'TIMEOUT' };
+      return `code=${err.code}(${codeNames[err.code] || '알수없음'}) message=${err.message}`;
+    }
+
+    document.getElementById('getOnce').addEventListener('click', () => {
+      log('getCurrentPosition() 호출 시작 (timeout=8000ms, enableHighAccuracy=false)');
+      const start = performance.now();
+
+      // 브라우저 콜백이 전혀 호출되지 않는 경우를 감지하기 위한 자체 워치독
+      const watchdog = setTimeout(() => {
+        log(`[워치독] ${((performance.now() - start) / 1000).toFixed(1)}s 경과 - 브라우저가 아직 success/error 콜백을 호출하지 않음`);
+      }, 8500);
+
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          clearTimeout(watchdog);
+          const elapsed = ((performance.now() - start) / 1000).toFixed(2);
+          log(`성공 (${elapsed}s): lat=${pos.coords.latitude}, lng=${pos.coords.longitude}, accuracy=${pos.coords.accuracy}m`);
+        },
+        (err) => {
+          clearTimeout(watchdog);
+          const elapsed = ((performance.now() - start) / 1000).toFixed(2);
+          log(`실패 (${elapsed}s): ${describeError(err)}`);
+        },
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 0 },
+      );
+    });
+
+    let watchId = null;
+    document.getElementById('watch').addEventListener('click', () => {
+      if (watchId !== null) return;
+      log('watchPosition() 시작');
+      watchId = navigator.geolocation.watchPosition(
+        (pos) => log(`watch 업데이트: lat=${pos.coords.latitude}, lng=${pos.coords.longitude}, accuracy=${pos.coords.accuracy}m`),
+        (err) => log(`watch 에러: ${describeError(err)}`),
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 0 },
+      );
+      document.getElementById('stopWatch').disabled = false;
+    });
+
+    document.getElementById('stopWatch').addEventListener('click', () => {
+      if (watchId !== null) {
+        navigator.geolocation.clearWatch(watchId);
+        log('watchPosition 중지');
+        watchId = null;
+        document.getElementById('stopWatch').disabled = true;
+      }
+    });
+
+    document.getElementById('clearLog').addEventListener('click', () => {
+      logEl.textContent = '';
+    });
+  </script>
+</body>
+</html>

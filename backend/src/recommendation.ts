@@ -1,7 +1,7 @@
 import { CANDIDATE_PLACES } from './data/places.js';
 import { estimateTravelMinutes, haversineKm } from './geo.js';
 import { isLlmAvailable, recommendWithLlm } from './llm.js';
-import { searchPlace, isKakaoSearchAvailable } from './kakao.js';
+import { searchPlace, isKakaoSearchAvailable, reverseGeocode } from './kakao.js';
 import { fetchOsrmRoute, isOsrmSupported } from './osrm.js';
 import type { Place, RecommendationRequest } from './types.js';
 
@@ -24,7 +24,11 @@ export async function recommendPlaces(
 ): Promise<Place[]> {
   if (isLlmAvailable()) {
     try {
+      // 출발지의 행정구역명을 구해 LLM이 지역을 정확히 인지하도록 한다.
+      const originLabel = (await reverseGeocode(req.location)) ?? undefined;
+
       const llmPlaces = await recommendWithLlm({
+        originLabel,
         origin: req.location,
         availableMinutes: req.availableMinutes,
         mode: req.mode,
