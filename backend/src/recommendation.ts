@@ -2,6 +2,7 @@ import { CANDIDATE_PLACES } from './data/places.js';
 import { estimateTravelMinutes, haversineKm } from './geo.js';
 import { isLlmAvailable, recommendWithLlm } from './llm.js';
 import { searchPlace, isKakaoSearchAvailable } from './kakao.js';
+import { fetchOsrmRoute, isOsrmSupported } from './osrm.js';
 import type { Place, RecommendationRequest } from './types.js';
 
 /** 추천 결과 최대 개수 */
@@ -33,7 +34,7 @@ export async function recommendPlaces(
 
       const places = await resolveLlmPlaces(req, llmPlaces);
       if (places.length > 0) {
-        return places;
+        return await refineWithOsrm(req, places);
       }
       // LLM 결과를 좌표/시간 조건으로 걸러 아무것도 안 남으면 폴백.
     } catch (err) {
@@ -41,7 +42,58 @@ export async function recommendPlaces(
     }
   }
 
-  return recommendByRules(req);
+  const places = recommendByRules(req);
+  return await refineWithOsrm(req, places);
+}
+
+/**
+ * 최종 추천 목록(최대 MAX_RESULTS개)에 대해서만 OSRM으로 실제 도로 기반
+ * 거리를 재계산해 덮어쓴다. 후보 스코어링 단계는 haversine 추정치를
+ * 그대로 사용해 빠르게 유지하고, 사용자에게 노출되는 최종 결과만 정확도를 높인다.
+ *
+ * 이동시간은 OSRM의 duration이 아니라 보정된 거리에 estimateTravelMinutes를
+ * 다시 적용해 계산한다. OSRM 공개 데모 서버의 foot/bike 프로필은 표준
+ * osrm-backend 프로필과 달라 도보 duration이 비정상적으로 짧게 나오는
+ * 경우가 있어(예: 400m를 30초) 신뢰할 수 없기 때문이다(거리는 신뢰 가능).
+ *
+ * - transit 모드는 OSRM이 지원하지 않아 건드리지 않는다.
+ * - OSRM 호출이 실패(네트워크/타임아웃 등)하면 해당 장소는 기존 추정치를 그대로 유지한다.
+ * - OSRM_BASE_URL 미설정 시에도 공개 데모 서버로 동작하므로 별도 설정 없이 사용 가능하다.
+ */
+async function refineWithOsrm(
+  req: RecommendationRequest,
+  places: Place[],
+): Promise<Place[]> {
+  const { location, mode, availableMinutes, tripType } = req;
+  if (!isOsrmSupported(mode)) return places;
+
+  const isRoundtrip = (tripType ?? 'roundtrip') === 'roundtrip';
+
+  const refined = await Promise.all(
+    places.map(async (place) => {
+      const route = await fetchOsrmRoute(
+        location,
+        { lat: place.lat, lng: place.lng },
+        mode,
+      );
+      if (!route) return place;
+
+      const distanceKm = Math.round(route.distanceKm * 10) / 10;
+      return {
+        ...place,
+        distanceKm,
+        travelMinutes: estimateTravelMinutes(distanceKm, mode),
+      };
+    }),
+  );
+
+  // OSRM 보정 결과로 왕복/편도 시간이 자투리 시간을 초과하게 된 장소는 제외한다.
+  const filtered = refined.filter((p) => {
+    const required = isRoundtrip ? p.travelMinutes * 2 : p.travelMinutes;
+    return required < availableMinutes;
+  });
+
+  return filtered;
 }
 
 /**
