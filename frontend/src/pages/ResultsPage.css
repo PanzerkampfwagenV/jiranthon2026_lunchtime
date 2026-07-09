@@ -1,0 +1,249 @@
+.results {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* 지도 + 목록 레이아웃: 모바일은 세로, 넓은 화면은 2단 */
+.results__layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.results__map {
+  width: 100%;
+}
+
+/* 지도 뷰 */
+.map-view {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.map-view__canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.map-view--placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  padding: 1rem;
+}
+
+.map-view__loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* 정렬/필터 컨트롤 */
+.result-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.result-controls__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.result-controls__label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  min-width: 2.5rem;
+}
+
+/* 결과 목록/카드 */
+.result-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.result-item {
+  padding: 0;
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.result-item--active {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.result-item__main {
+  display: flex;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 1rem 1.25rem;
+  background: transparent;
+  border: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.result-item__thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border-radius: 10px;
+  flex: 0 0 auto;
+}
+
+.result-item__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.result-item__name {
+  font-size: 1.1rem;
+  margin: 0 0 0.25rem;
+}
+
+.result-item__meta {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin: 0 0 0.5rem;
+}
+
+.result-item__desc {
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.result-item__detail-btn {
+  width: 100%;
+  border: none;
+  border-top: 1px solid var(--border);
+  background: transparent;
+  color: var(--accent);
+  padding: 0.6rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* 결과 없음 */
+.results__empty {
+  text-align: center;
+}
+
+.results__empty-hint {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin: 0.5rem 0 0;
+}
+
+/* 상세 모달 */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 100;
+}
+
+.modal {
+  position: relative;
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 1.5rem;
+  max-width: 420px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 0.25rem;
+}
+
+.modal__thumb {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: 12px;
+  margin-bottom: 1rem;
+}
+
+.modal__title {
+  font-size: 1.3rem;
+  margin: 0 0 0.35rem;
+}
+
+.modal__meta {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0 0 0.85rem;
+}
+
+.modal__desc {
+  font-size: 0.95rem;
+  margin: 0 0 1.25rem;
+  line-height: 1.6;
+}
+
+/* 넓은 화면: 지도와 목록을 2단으로 */
+@media (min-width: 768px) {
+  .results {
+    max-width: 1080px;
+  }
+
+  .results__layout {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .results__map {
+    flex: 1 1 45%;
+    position: sticky;
+    top: 1rem;
+  }
+
+  .map-view {
+    height: 480px;
+  }
+
+  .results__list-panel {
+    flex: 1 1 55%;
+  }
+}
