@@ -244,8 +244,8 @@
   const DATA = {
     updated: "2026-07-09",
     milestones: [
-      { title: "1. 셋업", goal: "저장소·API 계약·디자인 확정, 각자 프로젝트 초기화", status: "progress" },
-      { title: "2. 핵심 기능", goal: "A: 입력 / B: 결과·지도 / C: 추천 API (Mock 병렬 개발)", status: "todo" },
+      { title: "1. 셋업", goal: "저장소·API 계약·디자인 확정, 각자 프로젝트 초기화", status: "done" },
+      { title: "2. 핵심 기능", goal: "A: 입력 / B: 결과·지도 / C: 추천 API (Mock 병렬 개발)", status: "progress" },
       { title: "3. 연동", goal: "실제 API 연결, FE-BE 통합", status: "todo" },
       { title: "4. 완성", goal: "예외 처리, 반응형, 테스트, 배포", status: "todo" }
     ],
@@ -254,11 +254,11 @@
       role: "전원 협의",
       groups: [
         { name: "협의", tasks: [
-          { t: "저장소 구조 결정 (monorepo vs 분리)", status: "todo" },
-          { t: "지도/길찾기 API 확정", status: "todo" },
-          { t: "API 인터페이스 계약 정의", status: "todo" },
+          { t: "저장소 구조 결정 (FE/BE 분리)", status: "done" },
+          { t: "지도/길찾기 API 확정 (Kakao Map)", status: "done" },
+          { t: "API 인터페이스 계약 정의", status: "done" },
           { t: "브랜치/커밋/리뷰 규칙 합의", status: "done" },
-          { t: "환경변수·API 키 관리 방식 합의", status: "todo" },
+          { t: "환경변수·API 키 관리 방식 합의", status: "done" },
           { t: "디자인 시안/와이어프레임 공유", status: "todo" }
         ]}
       ]
@@ -268,23 +268,23 @@
         name: "개발자 A", role: "프론트엔드 · 입력 & 첫 화면",
         groups: [
           { name: "초기 세팅", tasks: [
-            { t: "React + TS + Vite 프로젝트 생성", status: "todo" },
-            { t: "라우팅 구성", status: "todo" },
-            { t: "공통 UI/스타일 시스템 세팅", status: "todo" }
+            { t: "React + TS + Vite 프로젝트 생성", status: "done" },
+            { t: "라우팅 구성", status: "done" },
+            { t: "공통 UI/스타일 시스템 세팅", status: "done" }
           ]},
           { name: "첫 화면 & 위치 입력", tasks: [
-            { t: "랜딩 레이아웃 구현", status: "todo" },
-            { t: "GPS 현재 위치 연동", status: "todo" },
-            { t: "GPS 실패 예외 처리", status: "todo" },
-            { t: "지정 위치 검색 자동완성", status: "todo" },
-            { t: "위치 결과 마커/좌표 확정", status: "todo" }
+            { t: "랜딩 레이아웃 구현", status: "done" },
+            { t: "GPS 현재 위치 연동", status: "done" },
+            { t: "GPS 실패 예외 처리", status: "done" },
+            { t: "지정 위치 검색 자동완성", status: "progress" },
+            { t: "위치 결과 마커/좌표 확정", status: "progress" }
           ]},
           { name: "시간 입력 & 연동", tasks: [
-            { t: "자투리 시간 입력 UI", status: "todo" },
-            { t: "이동 수단 선택 옵션", status: "todo" },
-            { t: "입력값 유효성 검증", status: "todo" },
-            { t: "전역 상태 관리 세팅", status: "todo" },
-            { t: "추천 API 호출/로딩·에러 처리", status: "todo" }
+            { t: "자투리 시간 입력 UI", status: "done" },
+            { t: "이동 수단 선택 옵션", status: "done" },
+            { t: "입력값 유효성 검증", status: "done" },
+            { t: "전역 상태 관리 세팅", status: "done" },
+            { t: "추천 API 호출/로딩·에러 처리", status: "done" }
           ]}
         ]
       },
@@ -292,10 +292,10 @@
         name: "개발자 B", role: "프론트엔드 · 결과 & 지도",
         groups: [
           { name: "추천 결과 화면", tasks: [
-            { t: "결과 목록 레이아웃", status: "todo" },
-            { t: "장소 카드 컴포넌트", status: "todo" },
+            { t: "결과 목록 레이아웃", status: "progress" },
+            { t: "장소 카드 컴포넌트", status: "progress" },
             { t: "정렬/필터 기능", status: "todo" },
-            { t: "결과없음/로딩/에러 UI", status: "todo" }
+            { t: "결과없음/로딩/에러 UI", status: "progress" }
           ]},
           { name: "지도 시각화", tasks: [
             { t: "지도 SDK 통합", status: "todo" },
