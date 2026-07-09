@@ -1,7 +1,6 @@
 # AGENTS.md
 
-> Refer to [.user-agents.md](.user-agents.md) for all rules and guidelines.
-> Record personal agent instructions in [.user-agents.md](.user-agents.md), and shared instructions in this file (AGENTS.md).
+> Also refer to [.user-agents.md](.user-agents.md).
 
 ## Git Commit Convention
 
@@ -15,7 +14,7 @@ Always use the following commit message format:
 
 Split commits into logical units. Do not lump unrelated changes into a single commit.
 
-Write commit messages in Korean whenever possible.
+Write commit messages in Korean whenever possible, using language that a mid-level IT engineer can understand.
 
 ## Devlog Convention
 
