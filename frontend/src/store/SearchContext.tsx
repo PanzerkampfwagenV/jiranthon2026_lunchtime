@@ -7,6 +7,7 @@ import {
 import type {
   SelectedLocation,
   TravelMode,
+  MbtiType,
   Place,
 } from '../types';
 
@@ -14,10 +15,12 @@ interface SearchState {
   location: SelectedLocation | null;
   availableMinutes: number;
   mode: TravelMode;
+  mbti: MbtiType | null;
   places: Place[];
   setLocation: (loc: SelectedLocation | null) => void;
   setAvailableMinutes: (minutes: number) => void;
   setMode: (mode: TravelMode) => void;
+  setMbti: (mbti: MbtiType | null) => void;
   setPlaces: (places: Place[]) => void;
 }
 
@@ -29,6 +32,8 @@ export function SearchProvider({ children }: { children: ReactNode }) {
   const [availableMinutes, setAvailableMinutes] = useState<number>(180);
   // 기본값: 대중교통
   const [mode, setMode] = useState<TravelMode>('transit');
+  // MBTI는 선택 사항. 기본값 없음(null).
+  const [mbti, setMbti] = useState<MbtiType | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
 
   return (
@@ -37,10 +42,12 @@ export function SearchProvider({ children }: { children: ReactNode }) {
         location,
         availableMinutes,
         mode,
+        mbti,
         places,
         setLocation,
         setAvailableMinutes,
         setMode,
+        setMbti,
         setPlaces,
       }}
     >

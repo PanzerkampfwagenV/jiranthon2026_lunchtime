@@ -105,6 +105,17 @@
   color: var(--text-muted);
 }
 
+.mbti-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
+}
+
+.mbti-grid .chip {
+  padding: 0.5rem 0.25rem;
+  text-align: center;
+}
+
 .location-actions {
   display: flex;
   flex-direction: column;

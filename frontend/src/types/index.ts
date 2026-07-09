@@ -10,6 +10,13 @@ export interface LatLng {
 /** 이동 수단 */
 export type TravelMode = 'walking' | 'transit' | 'driving';
 
+/** MBTI 16가지 성격 유형 */
+export type MbtiType =
+  | 'ISTJ' | 'ISFJ' | 'INFJ' | 'INTJ'
+  | 'ISTP' | 'ISFP' | 'INFP' | 'INTP'
+  | 'ESTP' | 'ESFP' | 'ENFP' | 'ENTP'
+  | 'ESTJ' | 'ESFJ' | 'ENFJ' | 'ENTJ';
+
 /** 선택된 위치 정보 (좌표 + 표시용 라벨) */
 export interface SelectedLocation {
   coords: LatLng;

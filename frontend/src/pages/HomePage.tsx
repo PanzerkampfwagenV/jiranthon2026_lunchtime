@@ -12,7 +12,7 @@ import {
   storeTheme,
   type ThemeMode,
 } from '../config/settings';
-import type { TravelMode } from '../types';
+import type { TravelMode, MbtiType } from '../types';
 import './HomePage.css';
 
 const TIME_PRESETS = [30, 60, 90, 120];
@@ -21,6 +21,13 @@ const MODE_OPTIONS: { value: TravelMode; label: string; icon: string }[] = [
   { value: 'walking', label: '도보', icon: '🚶' },
   { value: 'transit', label: '대중교통', icon: '🚌' },
   { value: 'driving', label: '자동차', icon: '🚗' },
+];
+
+const MBTI_OPTIONS: MbtiType[] = [
+  'ISTJ', 'ISFJ', 'INFJ', 'INTJ',
+  'ISTP', 'ISFP', 'INFP', 'INTP',
+  'ESTP', 'ESFP', 'ENFP', 'ENTP',
+  'ESTJ', 'ESFJ', 'ENFJ', 'ENTJ',
 ];
 
 const THEME_OPTIONS: { value: ThemeMode; label: string }[] = [
@@ -35,7 +42,7 @@ const THEME_ICONS: Record<ThemeMode, string> = {
   dark: '🌙',
 };
 
-type PanelKey = 'location' | 'time' | 'mode';
+type PanelKey = 'location' | 'time' | 'mode' | 'mbti';
 
 const MODE_LABELS: Record<TravelMode, string> = {
   walking: '도보',
@@ -58,9 +65,11 @@ export default function HomePage() {
     location,
     availableMinutes,
     mode,
+    mbti,
     setLocation,
     setAvailableMinutes,
     setMode,
+    setMbti,
     setPlaces,
   } = useSearch();
   const { loading: gpsLoading, requestLocation } = useGeolocation();
@@ -79,7 +88,12 @@ export default function HomePage() {
   // 현재 펼쳐진 설정 패널. null이면 모두 접힌 상태.
   const [activePanel, setActivePanel] = useState<PanelKey | null>(null);
   // 사용자가 기본값에서 직접 바꾼 항목 추적 → 해시태그 강조에 사용.
-  const [customized, setCustomized] = useState<Record<PanelKey, boolean>>({
+  // (mbti는 선택 옵션이라 값 존재 여부로 강조를 판단하므로 제외)
+  const [customized, setCustomized] = useState<{
+    location: boolean;
+    time: boolean;
+    mode: boolean;
+  }>({
     location: false,
     time: false,
     mode: false,
@@ -155,6 +169,11 @@ export default function HomePage() {
   const handleSelectMode = (next: TravelMode) => {
     setMode(next);
     setCustomized((prev) => ({ ...prev, mode: true }));
+  };
+
+  // MBTI는 선택 옵션. 같은 값을 다시 누르면 선택 해제한다.
+  const handleSelectMbti = (next: MbtiType) => {
+    setMbti(mbti === next ? null : next);
   };
 
   const handleSubmit = async () => {
@@ -241,6 +260,16 @@ export default function HomePage() {
           aria-expanded={activePanel === 'mode'}
         >
           #이동수단·{MODE_LABELS[mode]}
+        </button>
+        <button
+          type="button"
+          className={`hashtag ${activePanel === 'mbti' ? 'hashtag--open' : ''} ${
+            mbti ? 'hashtag--set' : ''
+          }`}
+          onClick={() => togglePanel('mbti')}
+          aria-expanded={activePanel === 'mbti'}
+        >
+          #MBTI{mbti ? `·${mbti}` : ''}
         </button>
       </nav>
 
@@ -374,6 +403,27 @@ export default function HomePage() {
           </div>
           <p className="panel-hint">
             설정하지 않으면 <strong>대중교통</strong>을 사용해요.
+          </p>
+        </section>
+      )}
+
+      {activePanel === 'mbti' && (
+        <section className="card" aria-label="MBTI 선택">
+          <div className="mbti-grid" role="group" aria-label="MBTI 유형">
+            {MBTI_OPTIONS.map((type) => (
+              <button
+                key={type}
+                type="button"
+                className={`chip ${mbti === type ? 'chip--active' : ''}`}
+                onClick={() => handleSelectMbti(type)}
+                aria-pressed={mbti === type}
+              >
+                {type}
+              </button>
+            ))}
+          </div>
+          <p className="panel-hint">
+            선택 사항이에요. 성향에 맞는 여행지를 곧 추천해 드릴게요.
           </p>
         </section>
       )}
