@@ -1,0 +1,70 @@
+import type {
+  RecommendationRequest,
+  RecommendationResponse,
+  Place,
+} from '../types';
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
+
+/** 백엔드가 아직 없을 때 사용하는 Mock 추천 데이터 */
+const MOCK_PLACES: Place[] = [
+  {
+    id: 'p1',
+    name: '남산공원',
+    category: '공원',
+    lat: 37.5512,
+    lng: 126.9882,
+    travelMinutes: 20,
+    distanceKm: 5.2,
+    description: '서울 도심 속 자연을 즐길 수 있는 대표 공원.',
+  },
+  {
+    id: 'p2',
+    name: '북촌한옥마을',
+    category: '명소',
+    lat: 37.5826,
+    lng: 126.9831,
+    travelMinutes: 25,
+    distanceKm: 3.1,
+    description: '전통 한옥이 밀집한 서울의 대표 관광지.',
+  },
+  {
+    id: 'p3',
+    name: '청계천',
+    category: '산책',
+    lat: 37.5696,
+    lng: 126.9789,
+    travelMinutes: 10,
+    distanceKm: 1.4,
+    description: '도심을 가로지르는 산책하기 좋은 하천.',
+  },
+];
+
+/**
+ * 추천 요청. 현재는 Mock 응답을 반환하며,
+ * VITE_API_BASE_URL 이 설정되면 실제 백엔드로 요청한다.
+ */
+export async function fetchRecommendations(
+  req: RecommendationRequest,
+): Promise<RecommendationResponse> {
+  if (!API_BASE_URL) {
+    // Mock 모드: 자투리 시간 내 도달 가능한 장소만 필터링 (편도 기준)
+    await new Promise((resolve) => setTimeout(resolve, 500));
+    const places = MOCK_PLACES.filter(
+      (p) => p.travelMinutes <= req.availableMinutes,
+    );
+    return { places };
+  }
+
+  const res = await fetch(`${API_BASE_URL}/api/recommendations`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+  });
+
+  if (!res.ok) {
+    throw new Error(`추천 요청 실패: ${res.status}`);
+  }
+
+  return (await res.json()) as RecommendationResponse;
+}
