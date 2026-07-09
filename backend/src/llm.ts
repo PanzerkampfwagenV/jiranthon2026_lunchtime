@@ -38,6 +38,126 @@ export function isLlmAvailable(): boolean {
   return Boolean(process.env.ANTHROPIC_API_KEY);
 }
 
+/** 장소 상세 정보 (LLM 생성) */
+export interface PlaceDetailInfo {
+  /** 이 장소에서 할 수 있는 활동 목록 (2~5개) */
+  activities: string[];
+  /** 유명한 것/포토스팟/명물 등 하이라이트 (1~4개) */
+  highlights: string[];
+  /** 상세 소개 2~3문장 */
+  summary: string;
+}
+
+/**
+ * 특정 장소에 대한 상세 정보(활동, 하이라이트, 소개)를 Claude로 생성한다.
+ * 좌표 등 위치 정보는 사용하지 않고 장소명/카테고리만으로 생성한다.
+ *
+ * @returns 실패 시 예외를 던진다(호출측에서 폴백 처리).
+ */
+export async function generatePlaceDetail(
+  placeName: string,
+  category: string,
+): Promise<PlaceDetailInfo> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    throw new Error('ANTHROPIC_API_KEY 미설정');
+  }
+
+  const baseUrl = (process.env.ANTHROPIC_BASE_URL || DEFAULT_BASE_URL).replace(
+    /\/$/,
+    '',
+  );
+  const model = process.env.ANTHROPIC_MODEL || DEFAULT_MODEL;
+
+  const prompt = `"${placeName}"(${category})에 대한 여행 정보를 알려주세요.
+
+요구사항:
+1. activities: 이곳에서 할 수 있는 구체적인 활동 2~5개 (예: "한강 자전거 타기", "일몰 감상")
+2. highlights: 이곳에서 유명하거나 볼만한 것 1~4개 (예: "벚꽃 명소로 유명", "야경 포토스팟")
+3. summary: 장소를 소개하는 한국어 2~3문장. 과장 없이 사실 기반으로 작성하세요.
+4. 실제로 존재하지 않는 정보를 지어내지 말고, 확실하지 않으면 일반적인 특징만 언급하세요.
+5. 반드시 아래 JSON 형식으로만 응답하세요. 다른 텍스트나 마크다운은 절대 포함하지 마세요.
+
+{
+  "activities": ["활동1", "활동2"],
+  "highlights": ["하이라이트1"],
+  "summary": "소개 문장"
+}`;
+
+  const res = await fetch(`${baseUrl}/chat/completions`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      max_tokens: 600,
+      messages: [
+        {
+          role: 'system',
+          content:
+            '당신은 JSON 생성기입니다. 반드시 유효한 JSON 객체만 출력하세요. 설명, 인사말, 코드펜스(```), 그 외 어떤 텍스트도 출력하지 마세요.',
+        },
+        { role: 'user', content: prompt },
+      ],
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`LLM 요청 실패: ${res.status}`);
+  }
+
+  const data = (await res.json()) as ChatCompletionResponse;
+  const text = data.choices?.[0]?.message?.content?.trim() ?? '';
+  if (!text) {
+    throw new Error('LLM 응답이 비어 있습니다.');
+  }
+
+  return parsePlaceDetail(text);
+}
+
+/** Claude 응답 텍스트에서 장소 상세 정보 JSON 객체를 안전하게 추출·파싱한다. */
+function parsePlaceDetail(text: string): PlaceDetailInfo {
+  const start = text.indexOf('{');
+  const end = text.lastIndexOf('}');
+  if (start === -1 || end === -1 || end <= start) {
+    throw new Error('LLM 응답에서 JSON 객체를 찾을 수 없습니다.');
+  }
+
+  const json = text.slice(start, end + 1);
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(json);
+  } catch {
+    const repaired = json
+      .replace(/[\u201C\u201D]/g, '"')
+      .replace(/[\u2018\u2019]/g, "'")
+      .replace(/,\s*([\]}])/g, '$1');
+    parsed = JSON.parse(repaired); // 실패 시 여기서 던져지고 상위에서 폴백
+  }
+
+  if (typeof parsed !== 'object' || parsed === null) {
+    throw new Error('LLM 응답이 객체가 아닙니다.');
+  }
+
+  const obj = parsed as Record<string, unknown>;
+  const toStringArray = (v: unknown): string[] =>
+    Array.isArray(v)
+      ? v.filter((x): x is string => typeof x === 'string' && x.trim() !== '')
+      : [];
+
+  const activities = toStringArray(obj.activities);
+  const highlights = toStringArray(obj.highlights);
+  const summary = typeof obj.summary === 'string' ? obj.summary : '';
+
+  if (activities.length === 0 && highlights.length === 0 && !summary) {
+    throw new Error('LLM 응답에 유효한 상세 정보가 없습니다.');
+  }
+
+  return { activities, highlights, summary };
+}
+
 /**
  * Claude에게 입력 조건(위치·시간·이동수단·취향)에 맞는 여행 장소를 추천받는다.
  * 좌표는 생성하지 않고 장소명만 받는다(좌표는 카카오 검색으로 보정).
