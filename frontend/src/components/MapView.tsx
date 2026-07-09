@@ -40,7 +40,7 @@ export default function MapView({
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<kakao.maps.Map | null>(null);
   const markersRef = useRef<Map<string, kakao.maps.Marker>>(new Map());
-  const infoWindowRef = useRef<kakao.maps.InfoWindow | null>(null);
+  const overlayRef = useRef<kakao.maps.CustomOverlay | null>(null);
   const polylineRef = useRef<kakao.maps.Polyline | null>(null);
   // onSelect/onRouteChange가 매 렌더마다 바뀌어도 effect를 다시 걸지 않도록 ref로 보관
   const onSelectRef = useRef(onSelect);
@@ -60,9 +60,6 @@ export default function MapView({
       level: 6,
     });
     mapRef.current = map;
-
-    const infoWindow = new kakao.maps.InfoWindow({ zIndex: 10 });
-    infoWindowRef.current = infoWindow;
 
     const bounds = new kakao.maps.LatLngBounds();
     bounds.extend(originLatLng);
@@ -100,26 +97,27 @@ export default function MapView({
     return () => {
       markers.forEach((m) => m.setMap(null));
       markers.clear();
-      infoWindow.close();
+      overlayRef.current?.setMap(null);
+      overlayRef.current = null;
       polylineRef.current?.setMap(null);
       polylineRef.current = null;
       mapRef.current = null;
     };
   }, [status, origin.lat, origin.lng, places]);
 
-  // 선택 장소 변경 시: InfoWindow 열고 중심 이동, 출발지→장소 경로 표시
+  // 선택 장소 변경 시: 커스텀 오버레이(이름표) 표시 및 중심 이동, 출발지→장소 경로 표시
   useEffect(() => {
     if (status !== 'ready') return;
     const map = mapRef.current;
-    const infoWindow = infoWindowRef.current;
-    if (!map || !infoWindow) return;
+    if (!map) return;
 
-    // 이전 경로선 제거
+    // 이전 오버레이/경로선 제거
+    overlayRef.current?.setMap(null);
+    overlayRef.current = null;
     polylineRef.current?.setMap(null);
     polylineRef.current = null;
 
     if (!selectedId) {
-      infoWindow.close();
       onRouteChangeRef.current?.('', null);
       return;
     }
@@ -128,12 +126,21 @@ export default function MapView({
     const place = places.find((p) => p.id === selectedId);
     if (!marker || !place) return;
 
-    infoWindow.setContent(
-      `<div style="padding:6px 10px;font-size:13px;font-weight:600;white-space:nowrap;">${escapeHtml(
-        place.name,
-      )}</div>`,
-    );
-    infoWindow.open(map, marker);
+    const labelEl = document.createElement('div');
+    labelEl.className = 'map-view__label';
+    labelEl.textContent = place.name;
+    labelEl.style.cssText =
+      'padding:6px 10px;font-size:13px;font-weight:600;white-space:nowrap;' +
+      'background:#1f2937;color:#ffffff;border-radius:6px;box-shadow:0 2px 6px rgba(0,0,0,0.25);';
+
+    const overlay = new window.kakao.maps.CustomOverlay({
+      position: marker.getPosition(),
+      content: labelEl,
+      yAnchor: 1.4,
+      zIndex: 10,
+    });
+    overlay.setMap(map);
+    overlayRef.current = overlay;
     map.setCenter(marker.getPosition());
 
     // 실제(또는 대체) 경로를 조회해 Polyline으로 표시한다.
@@ -194,14 +201,4 @@ export default function MapView({
       )}
     </div>
   );
-}
-
-/** InfoWindow에 사용자 데이터를 넣기 전 XSS 방지용 이스케이프 */
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }
