@@ -1,5 +1,5 @@
 import type { LatLng, TravelMode } from './types.js';
-import { haversineKm } from './geo.js';
+import { estimateTravelMinutes, haversineKm } from './geo.js';
 
 /** 경로 좌표 목록 + 실제 소요시간/거리 */
 export interface RouteResult {
@@ -94,19 +94,19 @@ async function fetchDrivingRoute(
   };
 }
 
-/** 실제 경로 API를 쓸 수 없을 때의 직선 대체 경로 */
+/**
+ * 실제 경로 API를 쓸 수 없을 때의 직선 대체 경로.
+ * 이동시간은 geo.ts의 estimateTravelMinutes()로 계산해, 추천 목록(Place.travelMinutes)과
+ * 동일한 공식(우회 보정 계수 포함)을 쓰도록 통일한다. 이전에는 여기서만 우회 계수 없이
+ * 계산해 카드 목록의 추정 시간과 지도 선택 시 표시되는 시간이 서로 달라지는 불일치가 있었다.
+ */
 function straightLineRoute(
   origin: LatLng,
   destination: LatLng,
   mode: TravelMode,
 ): RouteResult {
   const distanceKm = haversineKm(origin, destination);
-  const AVG_SPEED_KMH: Record<TravelMode, number> = {
-    walking: 4.5,
-    transit: 18,
-    driving: 22,
-  };
-  const durationMinutes = Math.round((distanceKm / AVG_SPEED_KMH[mode]) * 60);
+  const durationMinutes = estimateTravelMinutes(distanceKm, mode);
 
   return {
     path: [origin, destination],
