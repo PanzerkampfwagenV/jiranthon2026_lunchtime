@@ -2,6 +2,10 @@
 
 > Also refer to [.user-agents.md](.user-agents.md).
 
+## Memory Convention
+
+Record persistent knowledge and things to remember in this file (AGENTS.md), not in the agent memory store.
+
 ## Git Commit Convention
 
 Always use the following commit message format:
