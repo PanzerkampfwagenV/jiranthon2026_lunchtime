@@ -17,7 +17,7 @@ function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
-function parseLocation(raw: unknown): LatLng {
+export function parseLocation(raw: unknown): LatLng {
   if (typeof raw !== 'object' || raw === null) {
     throw AppError.invalidInput('location은 필수입니다.');
   }
@@ -93,4 +93,41 @@ export function parseRecommendationRequest(
     tags: parsedTags,
     tripType: parsedTripType,
   };
+}
+
+/** GET /api/route 쿼리 파라미터 파싱 결과 */
+export interface RouteQuery {
+  origin: LatLng;
+  destination: LatLng;
+  mode: TravelMode;
+}
+
+function parseLatLngQuery(raw: unknown, label: string): LatLng {
+  if (typeof raw !== 'string') {
+    throw AppError.invalidInput(`${label}는 필수입니다.`);
+  }
+  const [latStr, lngStr] = raw.split(',');
+  const lat = Number(latStr);
+  const lng = Number(lngStr);
+  if (!isFiniteNumber(lat) || !isFiniteNumber(lng)) {
+    throw AppError.invalidInput(`${label}는 "lat,lng" 형식이어야 합니다.`);
+  }
+  return parseLocation({ lat, lng });
+}
+
+/** GET /api/route?origin=lat,lng&destination=lat,lng&mode=... 쿼리 검증 */
+export function parseRouteQuery(
+  query: Record<string, unknown>,
+): RouteQuery {
+  const origin = parseLatLngQuery(query.origin, 'origin');
+  const destination = parseLatLngQuery(query.destination, 'destination');
+
+  const { mode } = query;
+  if (typeof mode !== 'string' || !VALID_MODES.includes(mode as TravelMode)) {
+    throw AppError.invalidInput(
+      `mode는 ${VALID_MODES.join(', ')} 중 하나여야 합니다.`,
+    );
+  }
+
+  return { origin, destination, mode: mode as TravelMode };
 }
