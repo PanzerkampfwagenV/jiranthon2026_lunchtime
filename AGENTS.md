@@ -13,6 +13,10 @@ Always use the following commit message format:
 - detail 2
 ```
 
+Split commits into logical units. Do not lump unrelated changes into a single commit.
+
+Write commit messages in Korean whenever possible.
+
 ## Devlog Convention
 
 Record development progress under `docs/devlog/` after major work is completed and committed.
