@@ -10,6 +10,8 @@ interface PlaceCardProps {
   onSelect?: (id: string) => void;
   /** 상세 보기 열기 */
   onOpenDetail?: (place: Place) => void;
+  /** 지도에서 조회한 실제(또는 대체) 경로 결과. 이 카드가 선택된 경우에만 전달된다. */
+  liveRoute?: { durationMinutes: number; isActualRoute: boolean };
 }
 
 /** 추천 장소 하나를 표현하는 카드. 목록과 지도가 공유한다. */
@@ -19,6 +21,7 @@ export default function PlaceCard({
   onHover,
   onSelect,
   onOpenDetail,
+  liveRoute,
 }: PlaceCardProps) {
   return (
     <li
@@ -45,7 +48,13 @@ export default function PlaceCard({
         <div className="result-item__body">
           <h2 className="result-item__name">{place.name}</h2>
           <p className="result-item__meta">
-            {place.category} · 약 {place.travelMinutes}분 · {place.distanceKm}km
+            {place.category} ·{' '}
+            {liveRoute && liveRoute.isActualRoute ? (
+              <>실제 약 {liveRoute.durationMinutes}분</>
+            ) : (
+              <>약 {place.travelMinutes}분</>
+            )}{' '}
+            · {place.distanceKm}km
           </p>
           {place.description && (
             <p className="result-item__desc">{place.description}</p>
