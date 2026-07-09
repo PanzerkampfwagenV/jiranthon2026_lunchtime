@@ -6,6 +6,8 @@
 
 Record persistent knowledge and things to remember in this file (AGENTS.md), not in the agent memory store.
 
+Throughout every turn of the conversation, whenever something comes up that other teammates' agents should also remember, record it in this file (AGENTS.md) so the knowledge is shared across the team.
+
 ## Git Commit Convention
 
 Always use the following commit message format:
