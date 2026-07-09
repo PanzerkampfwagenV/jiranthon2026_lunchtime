@@ -120,6 +120,8 @@ declare namespace kakao.maps {
       size?: number;
       /** 페이지 번호 */
       page?: number;
+      /** 카테고리 그룹 코드로 결과를 필터링 (예: 'PO3' 공공기관) */
+      category_group_code?: string;
     }
 
     class Places {
@@ -132,6 +134,27 @@ declare namespace kakao.maps {
           pagination: Pagination,
         ) => void,
         options?: KeywordSearchOptions,
+      ): void;
+    }
+
+    /** 주소 검색 결과 항목 (일부 필드만 선언) */
+    interface AddressSearchResultItem {
+      address_name: string;
+      /** 경도 (문자열) */
+      x: string;
+      /** 위도 (문자열) */
+      y: string;
+    }
+
+    /** 주소 ↔ 좌표 변환 서비스. "서울", "강남구"처럼 지역/주소를 입력했을 때 사용한다. */
+    class Geocoder {
+      constructor();
+      addressSearch(
+        address: string,
+        callback: (
+          result: AddressSearchResultItem[],
+          status: Status,
+        ) => void,
       ): void;
     }
   }
