@@ -54,3 +54,9 @@ coverage/
 
 # Dev server runtime (PID/로그)
 .run/
+
+# Python (E2E 테스트용 가상환경/캐시/아티팩트)
+.venv/
+__pycache__/
+.pytest_cache/
+tests/e2e/_artifacts/
