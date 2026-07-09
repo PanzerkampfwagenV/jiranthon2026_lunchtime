@@ -21,7 +21,7 @@ export function useKakaoLoader(): LoadStatus {
       return;
     }
 
-    // 이미 로드 완료된 경우
+    // 이미 maps까지 초기화 완료된 경우
     if (window.kakao?.maps) {
       setStatus('ready');
       return;
@@ -29,8 +29,16 @@ export function useKakaoLoader(): LoadStatus {
 
     setStatus('loading');
 
+    let cancelled = false;
+
     const onReady = () => {
-      window.kakao.maps.load(() => setStatus('ready'));
+      // autoload=false 이므로 maps.load로 초기화 후 ready 처리
+      window.kakao.maps.load(() => {
+        if (!cancelled) setStatus('ready');
+      });
+    };
+    const onError = () => {
+      if (!cancelled) setStatus('error');
     };
 
     const existing = document.getElementById(
@@ -38,23 +46,34 @@ export function useKakaoLoader(): LoadStatus {
     ) as HTMLScriptElement | null;
 
     if (existing) {
-      existing.addEventListener('load', onReady);
-      existing.addEventListener('error', () => setStatus('error'));
+      // 스크립트가 이미 DOM에 있는 경우:
+      // window.kakao가 준비돼 있으면 즉시 초기화, 아니면 load 이벤트를 기다린다.
+      if (window.kakao) {
+        onReady();
+      } else {
+        existing.addEventListener('load', onReady);
+        existing.addEventListener('error', onError);
+      }
       return () => {
+        cancelled = true;
         existing.removeEventListener('load', onReady);
+        existing.removeEventListener('error', onError);
       };
     }
 
     const script = document.createElement('script');
     script.id = SCRIPT_ID;
     script.async = true;
-    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&autoload=false`;
+    // services 라이브러리 포함: 장소 검색(Places) API 사용
+    script.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${appKey}&autoload=false&libraries=services`;
     script.addEventListener('load', onReady);
-    script.addEventListener('error', () => setStatus('error'));
+    script.addEventListener('error', onError);
     document.head.appendChild(script);
 
     return () => {
+      cancelled = true;
       script.removeEventListener('load', onReady);
+      script.removeEventListener('error', onError);
     };
   }, [appKey]);
 
