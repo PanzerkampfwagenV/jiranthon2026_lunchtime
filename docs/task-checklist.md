@@ -77,27 +77,27 @@
 > 역할·범위: [product-requirements.md — 개발자 C 백엔드 & 추천 로직](product-requirements.md#개발자-c--백엔드--추천-로직)
 
 ### 서버 세팅
-- [ ] 백엔드 프로젝트 초기화 (Express/FastAPI)
-- [ ] 프로젝트 구조 / 라우팅 / 에러 핸들링 미들웨어 구성
-- [ ] CORS, 환경변수, 로깅 설정
-- [ ] API 문서화 (Swagger/OpenAPI)
+- [x] 백엔드 프로젝트 초기화 (Express/FastAPI) — **Node.js + Express + TypeScript** (`backend/`)
+- [x] 프로젝트 구조 / 라우팅 / 에러 핸들링 미들웨어 구성 — `app.ts` 중앙 에러 핸들러
+- [x] CORS, 환경변수, 로깅 설정 — `CORS_ORIGIN`/`PORT` env, `.env.example`
+- [ ] API 문서화 (Swagger/OpenAPI) *(README에 계약 기재, Swagger 미도입)*
 
 ### 외부 API 연동 (`M-06`)
-- [ ] 지도/장소 검색 API 연동 (주변 여행지 조회)
-- [ ] 길찾기/이동시간 API 연동 (출발지 → 각 장소 소요시간)
+- [ ] 지도/장소 검색 API 연동 (주변 여행지 조회) *(현재 시드 데이터로 대체)*
+- [ ] 길찾기/이동시간 API 연동 (출발지 → 각 장소 소요시간) *(Haversine + 속도 추정으로 대체)*
 - [ ] 외부 API 응답 캐싱 / 호출 최적화 (요금·속도 고려)
 
 ### 추천 로직 (`M-05`, `M-06`)
-- [ ] `POST /api/recommendations` 엔드포인트 구현 — 계약은 [product-requirements.md — 3. API 계약](product-requirements.md#3-api-계약-contract--병렬-작업의-기준)
-- [ ] 입력 위치 기준 후보 장소 수집
-- [ ] **자투리 시간 내 도달 가능 여부 필터링** (편도 or 왕복 기준 정의)
-- [ ] 이동수단별 이동시간 계산 로직
-- [ ] 추천 랭킹/스코어링 (이동시간, 거리, 인기도 등 가중치)
-- [ ] 입력값 유효성 검증 및 에러 응답 규격화 ([product-requirements.md — 3.3 에러 응답 규격](product-requirements.md#33-에러-응답-규격))
+- [x] `POST /api/recommendations` 엔드포인트 구현 — 계약은 [product-requirements.md — 3. API 계약](product-requirements.md#3-api-계약-contract--병렬-작업의-기준)
+- [x] 입력 위치 기준 후보 장소 수집 — `data/places.ts` 시드 12곳
+- [x] **자투리 시간 내 도달 가능 여부 필터링** — 편도/왕복(`tripType`) 기준 적용
+- [x] 이동수단별 이동시간 계산 로직 — `geo.ts` (도보/대중교통/자동차 속도·우회 보정)
+- [x] 추천 랭킹/스코어링 (이동시간, 거리, 인기도 등 가중치) — 잔여시간 비율 + 태그 보너스
+- [x] 입력값 유효성 검증 및 에러 응답 규격화 ([product-requirements.md — 3.3 에러 응답 규격](product-requirements.md#33-에러-응답-규격))
 
 ### 데이터 & 배포
-- [ ] 여행지 데이터 소스 확보/정제 (또는 검색 API 실시간 조회)
-- [ ] 필요 시 DB 설계 (장소, 카테고리)
+- [x] 여행지 데이터 소스 확보/정제 (또는 검색 API 실시간 조회) — 서울 도심 시드 데이터
+- [ ] 필요 시 DB 설계 (장소, 카테고리) *(현재 인메모리 시드)*
 - [ ] 단위 테스트 (추천 로직 핵심 케이스)
 - [ ] 배포 환경 구성 및 API 키 보안 관리
 
