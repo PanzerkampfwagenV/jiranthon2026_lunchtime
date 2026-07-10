@@ -9,11 +9,11 @@ export interface OsrmRoute {
 }
 
 /**
- * OSRM 프로필. walking/driving만 지원한다.
- * transit(대중교통)은 OSRM이 지원하지 않으므로 이 모듈을 사용하지 않는다.
+ * OSRM 프로토콜. driving만 지원한다.
+ * - walking: OSRM 공개 데모 서버의 foot 프로토콜이 공원/공원 당츠로 랑 도심 도로떑을 인식하지 버지 안범, 직선거리(haversine)를 쓰려야 맞다가 랰지거리롼 맞관범럈. 그 결과 자툁리 시간 필턴에서 러윀밀마 거단되는 회귀가 발생한다. 따라서 도보럌 쟁서 공개 연막 모렁(estimateTravelMinutes)로 유지한다.
+ * - transit(대중교통)렁 OSRM렁 지원하지 앞렉다.
  */
 const OSRM_PROFILE: Partial<Record<TravelMode, string>> = {
-  walking: 'foot',
   driving: 'car',
 };
 
@@ -26,7 +26,7 @@ function getBaseUrl(): string {
   return process.env.OSRM_BASE_URL ?? 'https://router.project-osrm.org';
 }
 
-/** OSRM 보정을 사용할 수 있는 이동수단인지 여부 (walking/driving만 지원) */
+/** OSRM 보정을 사용할 수 있는 이동수단인지 여부 (driving만 지원) */
 export function isOsrmSupported(mode: TravelMode): boolean {
   return mode in OSRM_PROFILE;
 }
