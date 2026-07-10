@@ -11,7 +11,7 @@ import './ResultsPage.css';
 
 // 개발자 B 담당: 추천 결과 목록 + 지도 시각화.
 export default function ResultsPage() {
-  const { location, availableMinutes, mode, places } = useSearch();
+  const { location, availableMinutes, mode, places, tagFallback } = useSearch();
   const { t } = useI18n();
 
   const MODE_LABELS: Record<TravelMode, string> = {
@@ -75,7 +75,13 @@ export default function ResultsPage() {
           <p className="results__empty-hint">{t.resultsEmptyHint}</p>
         </section>
       ) : (
-        <div className="results__layout">
+        <>
+          {tagFallback && (
+            <p className="results__tag-fallback" role="status">
+              {t.resultsTagFallback}
+            </p>
+          )}
+          <div className="results__layout">
           <div className="results__map">
             <MapView
               origin={location.coords}
@@ -130,6 +136,7 @@ export default function ResultsPage() {
             )}
           </div>
         </div>
+        </>
       )}
 
       <Link to="/" className="btn btn--full">

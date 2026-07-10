@@ -122,6 +122,8 @@ export interface Translation {
   resultsCategoryEmpty: string;
   routeNoteTransit: string;
   routeNoteFallback: string;
+  /** 태그(음식 종류 등) 요청이 있었지만 근처에 일치하는 곳이 없어 대체 추천했을 때 안내 문구 */
+  resultsTagFallback: string;
 
   // 결과 컨트롤
   sortLabel: string;
@@ -248,6 +250,7 @@ const ko: Translation = {
   resultsCategoryEmpty: '선택한 종류에 해당하는 장소가 없어요.',
   routeNoteTransit: '대중교통 경로는 지도에서 제공되지 않아 직선으로 표시돼요.',
   routeNoteFallback: '실제 경로를 불러오지 못해 직선으로 표시돼요.',
+  resultsTagFallback: '근처에 추천 음식점이 없어요. 대신 이런 장소는 어때요?',
 
   sortLabel: '정렬',
   sortByTime: '이동시간순',
@@ -372,6 +375,7 @@ const en: Translation = {
   resultsCategoryEmpty: 'No places in the selected category.',
   routeNoteTransit: 'Transit routes aren\u2019t shown on the map, so a straight line is used.',
   routeNoteFallback: 'Could not load the actual route, so a straight line is used.',
+  resultsTagFallback: 'No matching restaurants nearby. How about these places instead?',
 
   sortLabel: 'Sort',
   sortByTime: 'By time',
@@ -496,6 +500,7 @@ const ja: Translation = {
   resultsCategoryEmpty: '選択した種類に該当する場所がありません。',
   routeNoteTransit: '公共交通の経路は地図に表示されないため、直線で表示されます。',
   routeNoteFallback: '実際の経路を取得できなかったため、直線で表示されます。',
+  resultsTagFallback: '近くにおすすめの飲食店が見つかりませんでした。代わりにこんな場所はいかがですか?',
 
   sortLabel: '並べ替え',
   sortByTime: '移動時間順',

@@ -43,6 +43,21 @@ const CUISINE_OPTIONS: { value: CuisineType; icon: string }[] = [
   { value: 'snack', icon: '🍢' },
 ];
 
+/**
+ * 백엔드(LLM 프롬프트)로 전달할 음식 종류 한국어 고정 라벨.
+ * 화면 표시용 i18n 라벨(CUISINE_LABELS)과 달리 언어 설정과 무관하게 항상 한국어로 보낸다.
+ */
+const CUISINE_TAGS: Record<CuisineType, string> = {
+  korean: '한식',
+  chinese: '중식',
+  japanese: '일식',
+  western: '양식',
+  salad: '샐러드',
+  coffee: '커피/카페',
+  dessert: '디저트',
+  snack: '분식',
+};
+
 const THEME_OPTIONS: ThemeMode[] = ['system', 'light', 'dark'];
 
 const THEME_ICONS: Record<ThemeMode, string> = {
@@ -70,6 +85,7 @@ export default function HomePage() {
     setCuisines,
     setLuckyDay,
     setPlaces,
+    setTagFallback,
   } = useSearch();
   const { loading: gpsLoading, requestLocation } = useGeolocation();
   const {
@@ -258,12 +274,14 @@ export default function HomePage() {
         effectiveLocation = { coords, label: name ?? t.currentLocation, fromGps: true };
         setLocation(effectiveLocation);
       }
-      const { places } = await fetchRecommendations({
+      const { places, tagFallback } = await fetchRecommendations({
         location: effectiveLocation.coords,
         availableMinutes,
         mode,
+        tags: cuisines.length > 0 ? cuisines.map((c) => CUISINE_TAGS[c]) : undefined,
       });
       setPlaces(places);
+      setTagFallback(tagFallback ?? false);
       navigate('/results');
     } catch (err) {
       setError(

@@ -53,7 +53,9 @@ export async function fetchRecommendations(
     const places = MOCK_PLACES.filter(
       (p) => p.travelMinutes <= req.availableMinutes,
     );
-    return { places };
+    // Mock 데이터는 음식 관련 카테고리가 없어 태그 요청 시 항상 대체된 것으로 처리한다.
+    const tagFallback = Boolean(req.tags && req.tags.length > 0);
+    return { places, tagFallback };
   }
 
   const res = await fetch(`${API_BASE_URL}/api/recommendations`, {
@@ -72,7 +74,7 @@ export async function fetchRecommendations(
     // 도달 가능한 장소가 없는 경우: Mock 모드와 동일하게 빈 결과로 처리해
     // 결과 화면의 "조건에 맞는 장소가 없어요" 빈 상태 UI를 보여준다.
     if (code === 'NO_RESULT') {
-      return { places: [] };
+      return { places: [], tagFallback: false };
     }
 
     throw new Error(body?.error?.message ?? `추천 요청 실패: ${res.status}`);

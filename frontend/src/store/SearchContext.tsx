@@ -21,6 +21,8 @@ interface SearchState {
   cuisines: CuisineType[];
   luckyDay: LuckyDayInfo | null;
   places: Place[];
+  /** 태그(예: 음식 종류) 요청이 있었지만 근처에 일치하는 곳이 없어 다른 장소로 대체했는지 여부 */
+  tagFallback: boolean;
   setLocation: (loc: SelectedLocation | null) => void;
   setAvailableMinutes: (minutes: number) => void;
   setMode: (mode: TravelMode) => void;
@@ -28,6 +30,7 @@ interface SearchState {
   setCuisines: (cuisines: CuisineType[]) => void;
   setLuckyDay: (info: LuckyDayInfo | null) => void;
   setPlaces: (places: Place[]) => void;
+  setTagFallback: (value: boolean) => void;
 }
 
 const SearchContext = createContext<SearchState | undefined>(undefined);
@@ -45,6 +48,7 @@ export function SearchProvider({ children }: { children: ReactNode }) {
   // 럭키데이(오늘의 운세)도 선택 사항. 기본값 없음(null).
   const [luckyDay, setLuckyDay] = useState<LuckyDayInfo | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
+  const [tagFallback, setTagFallback] = useState<boolean>(false);
 
   return (
     <SearchContext.Provider
@@ -56,6 +60,7 @@ export function SearchProvider({ children }: { children: ReactNode }) {
         cuisines,
         luckyDay,
         places,
+        tagFallback,
         setLocation,
         setAvailableMinutes,
         setMode,
@@ -63,6 +68,7 @@ export function SearchProvider({ children }: { children: ReactNode }) {
         setCuisines,
         setLuckyDay,
         setPlaces,
+        setTagFallback,
       }}
     >
       {children}

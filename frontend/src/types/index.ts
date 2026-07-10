@@ -48,6 +48,8 @@ export interface RecommendationRequest {
   location: LatLng;
   availableMinutes: number;
   mode: TravelMode;
+  /** 취향 태그 (예: 맛집투어에서 선택한 음식 종류) */
+  tags?: string[];
 }
 
 /** 추천된 장소 */
@@ -66,6 +68,11 @@ export interface Place {
 /** 추천 응답 */
 export interface RecommendationResponse {
   places: Place[];
+  /**
+   * 요청에 태그(예: 맛집투어 음식 종류)가 있었지만 근처에 일치하는 장소를
+   * 찾지 못해 다른 장소로 대체했는지 여부.
+   */
+  tagFallback?: boolean;
 }
 
 /** GET /api/route 응답: 두 지점 간 경로와 실제(또는 추정) 소요시간/거리 */
