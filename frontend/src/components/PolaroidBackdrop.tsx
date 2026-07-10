@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import './PolaroidBackdrop.css';
 
 const TOTAL_IMAGES = 10;
-const PHOTO_COUNT = 5;
+const PHOTO_COUNT = 8;
 const SWAP_INTERVAL_MS = 4500;
 
 // 각 서울 이미지(seoul-01~10)에 어울리는 감성 여행 문구.
@@ -28,11 +28,14 @@ function captionFor(src: string): string {
 // (top/left는 vw/vh 기준 %, size는 px, delay는 s)
 // 회전각(rotate)은 교체될 때마다 랜덤하게 다시 부여한다.
 const LAYOUT_SLOTS = [
-  { top: 8, left: 6, size: 222, delay: 0 },
-  { top: 12, left: 74, size: 198, delay: 0.6 },
-  { top: 58, left: 3, size: 210, delay: 1.2 },
-  { top: 64, left: 78, size: 225, delay: 0.3 },
-  { top: 4, left: 40, size: 177, delay: 0.9 },
+  { top: 6, left: 4, size: 210, delay: 0 },
+  { top: 8, left: 76, size: 190, delay: 0.6 },
+  { top: 40, left: 2, size: 196, delay: 1.2 },
+  { top: 44, left: 80, size: 205, delay: 0.3 },
+  { top: 2, left: 40, size: 172, delay: 0.9 },
+  { top: 70, left: 20, size: 188, delay: 1.5 },
+  { top: 68, left: 60, size: 200, delay: 0.45 },
+  { top: 38, left: 42, size: 168, delay: 1.05 },
 ];
 
 function randomRotate(): number {
