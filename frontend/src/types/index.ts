@@ -17,6 +17,11 @@ export type MbtiType =
   | 'ESTP' | 'ESFP' | 'ENFP' | 'ENTP'
   | 'ESTJ' | 'ESFJ' | 'ENFJ' | 'ENTJ';
 
+/** 맛집투어 음식 종류 (중복 선택 가능한 선택 옵션) */
+export type CuisineType =
+  | 'korean' | 'chinese' | 'japanese' | 'western'
+  | 'salad' | 'coffee' | 'dessert' | 'snack';
+
 /** 럭키데이(오늘의 운세) 입력 정보 (선택 옵션) */
 export interface LuckyDayInfo {
   /** 생년월일 (YYYY-MM-DD) */

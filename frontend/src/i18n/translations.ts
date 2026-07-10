@@ -20,12 +20,21 @@ export interface Translation {
   // 홈 히어로
   homeTitle: string;
   homeSubtitle: string;
+  homeFoodTour: string;
+
+  // 패널 감성 문구(카드 상단)
+  leadLocation: string;
+  leadTime: string;
+  leadMode: string;
+  leadMbti: string;
+  leadLuckyDay: string;
 
   // 해시태그
   hashtagLocation: string;
   hashtagTime: string;
   hashtagMode: string;
   hashtagMbti: string;
+  hashtagCuisine: string;
   hashtagLuckyDay: string;
   searchConditionsLabel: string;
 
@@ -62,6 +71,19 @@ export interface Translation {
   mbtiPanelLabel: string;
   mbtiGroupLabel: string;
   mbtiHint: string;
+
+  // 맛집투어(음식 종류) 패널
+  cuisinePanelLabel: string;
+  cuisineGroupLabel: string;
+  cuisineHint: string;
+  cuisineKorean: string;
+  cuisineChinese: string;
+  cuisineJapanese: string;
+  cuisineWestern: string;
+  cuisineSalad: string;
+  cuisineCoffee: string;
+  cuisineDessert: string;
+  cuisineSnack: string;
 
   // 럭키데이 패널
   luckyDayPanelLabel: string;
@@ -138,11 +160,19 @@ const ko: Translation = {
 
   homeTitle: '자투리 시간, 어디로 떠날까?',
   homeSubtitle: '지금 위치와 남는 시간을 알려주면 다녀올 수 있는 곳을 찾아드려요.',
+  homeFoodTour: '🍜 오늘은 어떤 맛집투어를 떠나볼까요?',
+
+  leadLocation: '📍 지금, 어디에서 출발할까요?',
+  leadTime: '⏳ 오늘은 얼마나 여유로우세요?',
+  leadMode: '🧭 어떤 방식으로 떠나볼까요?',
+  leadMbti: '💞 당신다운 여행을 찾아볼게요.',
+  leadLuckyDay: '🍀 오늘의 운을 여행에 담아밐요.',
 
   hashtagLocation: '위치',
   hashtagTime: '자투리',
   hashtagMode: '이동수단',
   hashtagMbti: 'MBTI',
+  hashtagCuisine: '맛집투어',
   hashtagLuckyDay: '럭키데이',
   searchConditionsLabel: '검색 조건 설정',
 
@@ -175,7 +205,17 @@ const ko: Translation = {
   mbtiPanelLabel: 'MBTI 선택',
   mbtiGroupLabel: 'MBTI 유형',
   mbtiHint: '선택 사항이에요. 성향에 맞는 여행지를 곧 추천해 드릴게요.',
-
+  cuisinePanelLabel: '맛집투어 종류 선택',
+  cuisineGroupLabel: '음식 종류',
+  cuisineHint: '선택 사항이에요. 먹고 싶은 메뉴를 여러 개 고를 수 있어요.',
+  cuisineKorean: '한식',
+  cuisineChinese: '중식',
+  cuisineJapanese: '일식',
+  cuisineWestern: '양식',
+  cuisineSalad: '샐러드',
+  cuisineCoffee: '커피',
+  cuisineDessert: '디저트',
+  cuisineSnack: '분식',
   luckyDayPanelLabel: '럭키데이 정보 입력',
   birthDate: '생년월일',
   birthTime: '태어난 시각 (선택)',
@@ -242,11 +282,19 @@ const en: Translation = {
 
   homeTitle: 'Spare time — where to go?',
   homeSubtitle: 'Tell us your location and free time, and we\u2019ll find places you can visit.',
+  homeFoodTour: '🍜 What kind of food tour shall we go on today?',
+
+  leadLocation: '📍 Where shall we set off from?',
+  leadTime: '⏳ How much time do you have today?',
+  leadMode: '🧭 How would you like to travel?',
+  leadMbti: '💞 Let\u2019s find a trip that\u2019s so you.',
+  leadLuckyDay: '🍀 Bring today\u2019s luck along for the trip.',
 
   hashtagLocation: 'Location',
   hashtagTime: 'Spare',
   hashtagMode: 'Transport',
   hashtagMbti: 'MBTI',
+  hashtagCuisine: 'FoodTour',
   hashtagLuckyDay: 'LuckyDay',
   searchConditionsLabel: 'Set search conditions',
 
@@ -279,6 +327,18 @@ const en: Translation = {
   mbtiPanelLabel: 'Select MBTI',
   mbtiGroupLabel: 'MBTI type',
   mbtiHint: 'Optional. We\u2019ll soon recommend places that match your type.',
+
+  cuisinePanelLabel: 'Pick food types',
+  cuisineGroupLabel: 'Food types',
+  cuisineHint: 'Optional. Pick as many cravings as you like.',
+  cuisineKorean: 'Korean',
+  cuisineChinese: 'Chinese',
+  cuisineJapanese: 'Japanese',
+  cuisineWestern: 'Western',
+  cuisineSalad: 'Salad',
+  cuisineCoffee: 'Coffee',
+  cuisineDessert: 'Dessert',
+  cuisineSnack: 'Snacks',
 
   luckyDayPanelLabel: 'Enter LuckyDay info',
   birthDate: 'Date of birth',
@@ -346,11 +406,19 @@ const ja: Translation = {
 
   homeTitle: 'すきま時間、どこへ行く？',
   homeSubtitle: '今の場所と空き時間を教えてくれれば、行ける場所を探します。',
+  homeFoodTour: '🍜 今日はどんなグルメ巡りに出かけますか？',
+
+  leadLocation: '📍 今、どこから出発しますか？',
+  leadTime: '⏳ 今日はどれくらい余裕がありますか？',
+  leadMode: '🧭 どんな方法で出かけますか？',
+  leadMbti: '💞 あなたらしい旅を探します。',
+  leadLuckyDay: '🍀 今日の運を旅に込めて。',
 
   hashtagLocation: '場所',
   hashtagTime: 'すきま',
   hashtagMode: '移動手段',
   hashtagMbti: 'MBTI',
+  hashtagCuisine: 'グルメ巡り',
   hashtagLuckyDay: 'ラッキーデー',
   searchConditionsLabel: '検索条件の設定',
 
@@ -383,6 +451,18 @@ const ja: Translation = {
   mbtiPanelLabel: 'MBTIを選択',
   mbtiGroupLabel: 'MBTIタイプ',
   mbtiHint: '任意です。性格に合った旅行先を近日おすすめします。',
+
+  cuisinePanelLabel: 'グルメの種類を選択',
+  cuisineGroupLabel: '料理の種類',
+  cuisineHint: '任意です。食べたいメニューを複数選べます。',
+  cuisineKorean: '韓国料理',
+  cuisineChinese: '中華',
+  cuisineJapanese: '和食',
+  cuisineWestern: '洋食',
+  cuisineSalad: 'サラダ',
+  cuisineCoffee: 'コーヒー',
+  cuisineDessert: 'デザート',
+  cuisineSnack: '軽食',
 
   luckyDayPanelLabel: 'ラッキーデー情報の入力',
   birthDate: '生年月日',

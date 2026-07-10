@@ -14,7 +14,7 @@ import {
   storeTheme,
   type ThemeMode,
 } from '../config/settings';
-import type { TravelMode, MbtiType } from '../types';
+import type { TravelMode, MbtiType, CuisineType } from '../types';
 import './HomePage.css';
 
 const TIME_PRESETS = [30, 60, 90, 120];
@@ -32,6 +32,17 @@ const MBTI_OPTIONS: MbtiType[] = [
   'ESTJ', 'ESFJ', 'ENFJ', 'ENTJ',
 ];
 
+const CUISINE_OPTIONS: { value: CuisineType; icon: string }[] = [
+  { value: 'korean', icon: '🍚' },
+  { value: 'chinese', icon: '🥢' },
+  { value: 'japanese', icon: '🍣' },
+  { value: 'western', icon: '🍝' },
+  { value: 'salad', icon: '🥗' },
+  { value: 'coffee', icon: '☕' },
+  { value: 'dessert', icon: '🍰' },
+  { value: 'snack', icon: '🍢' },
+];
+
 const THEME_OPTIONS: ThemeMode[] = ['system', 'light', 'dark'];
 
 const THEME_ICONS: Record<ThemeMode, string> = {
@@ -40,7 +51,7 @@ const THEME_ICONS: Record<ThemeMode, string> = {
   dark: '🌙',
 };
 
-type PanelKey = 'location' | 'time' | 'mode' | 'mbti' | 'luckyDay';
+type PanelKey = 'location' | 'time' | 'mode' | 'mbti' | 'cuisine' | 'luckyDay';
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -50,11 +61,13 @@ export default function HomePage() {
     availableMinutes,
     mode,
     mbti,
+    cuisines,
     luckyDay,
     setLocation,
     setAvailableMinutes,
     setMode,
     setMbti,
+    setCuisines,
     setLuckyDay,
     setPlaces,
   } = useSearch();
@@ -118,6 +131,17 @@ export default function HomePage() {
     system: t.themeSystem,
     light: t.themeLight,
     dark: t.themeDark,
+  };
+
+  const CUISINE_LABELS: Record<CuisineType, string> = {
+    korean: t.cuisineKorean,
+    chinese: t.cuisineChinese,
+    japanese: t.cuisineJapanese,
+    western: t.cuisineWestern,
+    salad: t.cuisineSalad,
+    coffee: t.cuisineCoffee,
+    dessert: t.cuisineDessert,
+    snack: t.cuisineSnack,
   };
 
   const togglePanel = (key: PanelKey) => {
@@ -195,6 +219,15 @@ export default function HomePage() {
   // MBTI는 선택 옵션. 같은 값을 다시 누르면 선택 해제한다.
   const handleSelectMbti = (next: MbtiType) => {
     setMbti(mbti === next ? null : next);
+  };
+
+  // 맛집투어 음식 종류는 중복 선택. 같은 값을 다시 누르면 목록에서 제거한다.
+  const handleToggleCuisine = (next: CuisineType) => {
+    setCuisines(
+      cuisines.includes(next)
+        ? cuisines.filter((c) => c !== next)
+        : [...cuisines, next],
+    );
   };
 
   // 럭키데이 정보 저장. 생년월일은 필수 입력.
@@ -310,6 +343,16 @@ export default function HomePage() {
         </button>
         <button
           type="button"
+          className={`hashtag ${activePanel === 'cuisine' ? 'hashtag--open' : ''} ${
+            cuisines.length > 0 ? 'hashtag--set' : ''
+          }`}
+          onClick={() => togglePanel('cuisine')}
+          aria-expanded={activePanel === 'cuisine'}
+        >
+          #{t.hashtagCuisine}{cuisines.length > 0 ? `·${cuisines.length}` : ''}
+        </button>
+        <button
+          type="button"
           className={`hashtag ${activePanel === 'luckyDay' ? 'hashtag--open' : ''} ${
             luckyDay ? 'hashtag--set' : ''
           }`}
@@ -322,6 +365,7 @@ export default function HomePage() {
 
       {activePanel === 'location' && (
         <section className="card" aria-label={t.locationPanelLabel}>
+          <p className="card__lead">{t.leadLocation}</p>
           <div className="location-actions">
             <button
               type="button"
@@ -399,6 +443,7 @@ export default function HomePage() {
 
       {activePanel === 'time' && (
         <section className="card" aria-label={t.timePanelLabel}>
+          <p className="card__lead">{t.leadTime}</p>
           <div className="preset-group" role="group" aria-label={t.timePresetGroupLabel}>
             {TIME_PRESETS.map((preset) => (
               <button
@@ -431,6 +476,7 @@ export default function HomePage() {
 
       {activePanel === 'mode' && (
         <section className="card" aria-label={t.modePanelLabel}>
+          <p className="card__lead">{t.leadMode}</p>
           <div className="preset-group" role="group" aria-label={t.modeGroupLabel}>
             {MODE_OPTIONS.map((opt) => (
               <button
@@ -450,6 +496,7 @@ export default function HomePage() {
 
       {activePanel === 'mbti' && (
         <section className="card" aria-label={t.mbtiPanelLabel}>
+          <p className="card__lead">{t.leadMbti}</p>
           <div className="mbti-grid" role="group" aria-label={t.mbtiGroupLabel}>
             {MBTI_OPTIONS.map((type) => (
               <button
@@ -467,8 +514,29 @@ export default function HomePage() {
         </section>
       )}
 
+      {activePanel === 'cuisine' && (
+        <section className="card" aria-label={t.cuisinePanelLabel}>
+          <p className="card__lead">{t.homeFoodTour}</p>
+          <div className="preset-group preset-group--wrap" role="group" aria-label={t.cuisineGroupLabel}>
+            {CUISINE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                className={`chip ${cuisines.includes(opt.value) ? 'chip--active' : ''}`}
+                onClick={() => handleToggleCuisine(opt.value)}
+                aria-pressed={cuisines.includes(opt.value)}
+              >
+                {opt.icon} {CUISINE_LABELS[opt.value]}
+              </button>
+            ))}
+          </div>
+          <p className="panel-hint">{t.cuisineHint}</p>
+        </section>
+      )}
+
       {activePanel === 'luckyDay' && (
         <section className="card" aria-label={t.luckyDayPanelLabel}>
+          <p className="card__lead">{t.leadLuckyDay}</p>
           <div className="lucky-form">
             <label className="lucky-field">
               <span className="lucky-field__label">{t.birthDate}</span>

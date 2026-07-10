@@ -8,6 +8,7 @@ import type {
   SelectedLocation,
   TravelMode,
   MbtiType,
+  CuisineType,
   LuckyDayInfo,
   Place,
 } from '../types';
@@ -17,12 +18,14 @@ interface SearchState {
   availableMinutes: number;
   mode: TravelMode;
   mbti: MbtiType | null;
+  cuisines: CuisineType[];
   luckyDay: LuckyDayInfo | null;
   places: Place[];
   setLocation: (loc: SelectedLocation | null) => void;
   setAvailableMinutes: (minutes: number) => void;
   setMode: (mode: TravelMode) => void;
   setMbti: (mbti: MbtiType | null) => void;
+  setCuisines: (cuisines: CuisineType[]) => void;
   setLuckyDay: (info: LuckyDayInfo | null) => void;
   setPlaces: (places: Place[]) => void;
 }
@@ -37,6 +40,8 @@ export function SearchProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<TravelMode>('transit');
   // MBTI는 선택 사항. 기본값 없음(null).
   const [mbti, setMbti] = useState<MbtiType | null>(null);
+  // 맛집투어 음식 종류는 선택 사항. 중복 선택 가능, 기본값 없음([]).
+  const [cuisines, setCuisines] = useState<CuisineType[]>([]);
   // 럭키데이(오늘의 운세)도 선택 사항. 기본값 없음(null).
   const [luckyDay, setLuckyDay] = useState<LuckyDayInfo | null>(null);
   const [places, setPlaces] = useState<Place[]>([]);
@@ -48,12 +53,14 @@ export function SearchProvider({ children }: { children: ReactNode }) {
         availableMinutes,
         mode,
         mbti,
+        cuisines,
         luckyDay,
         places,
         setLocation,
         setAvailableMinutes,
         setMode,
         setMbti,
+        setCuisines,
         setLuckyDay,
         setPlaces,
       }}

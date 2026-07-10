@@ -43,6 +43,13 @@
   font-size: 0.95rem;
 }
 
+.card__lead {
+  margin: 0 0 0.85rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-strong, inherit);
+}
+
 .card {
   background: rgba(255, 255, 255, var(--glass-hero-card-opacity, 0.45));
   border: 1px solid rgba(255, 255, 255, 0.35);
