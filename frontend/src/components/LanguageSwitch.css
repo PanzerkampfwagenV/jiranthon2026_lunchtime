@@ -1,8 +1,4 @@
 .lang-switch {
-  position: fixed;
-  top: max(0.75rem, env(safe-area-inset-top));
-  right: 0.75rem;
-  z-index: 11;
   display: flex;
   gap: 0.15rem;
   padding: 0.2rem;
