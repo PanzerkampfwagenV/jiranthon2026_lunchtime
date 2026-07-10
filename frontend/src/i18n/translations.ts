@@ -158,7 +158,7 @@ const ko: Translation = {
   themeGroupLabel: '화면 모드 선택',
   languageGroupLabel: '언어 선택',
 
-  homeTitle: '자투리 시간, 어디로 떠날까?',
+  homeTitle: '틈나는 순간, 여행이 된다',
   homeSubtitle: '지금 위치와 남는 시간을 알려주면 다녀올 수 있는 곳을 찾아드려요.',
   homeFoodTour: '🍜 오늘은 어떤 맛집투어를 떠나볼까요?',
 

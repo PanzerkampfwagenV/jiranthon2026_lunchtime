@@ -277,26 +277,30 @@ export default function HomePage() {
   return (
     <main className="home">
       <PolaroidBackdrop />
-      <LanguageSwitch />
-      <div className="theme-switch" role="group" aria-label={t.themeGroupLabel}>
-        {THEME_OPTIONS.map((value) => (
-          <button
-            key={value}
-            type="button"
-            className={`theme-switch__option ${
-              theme === value ? 'theme-switch__option--active' : ''
-            }`}
-            onClick={() => handleThemeChange(value)}
-            aria-pressed={theme === value}
-            aria-label={THEME_LABELS[value]}
-            title={THEME_LABELS[value]}
-          >
-            {THEME_ICONS[value]}
-          </button>
-        ))}
+      <div className="top-controls">
+        <LanguageSwitch />
+        <div className="theme-switch" role="group" aria-label={t.themeGroupLabel}>
+          {THEME_OPTIONS.map((value) => (
+            <button
+              key={value}
+              type="button"
+              className={`theme-switch__option ${
+                theme === value ? 'theme-switch__option--active' : ''
+              }`}
+              onClick={() => handleThemeChange(value)}
+              aria-pressed={theme === value}
+              aria-label={THEME_LABELS[value]}
+              title={THEME_LABELS[value]}
+            >
+              {THEME_ICONS[value]}
+            </button>
+          ))}
+        </div>
       </div>
       <header className="home__hero">
-        <h1 className="home__title">{t.homeTitle}</h1>
+        <h1 className="home__title">
+          <span className="home__brand">틈나</span>는 순간, 여행이 된다
+        </h1>
         <p className="home__subtitle">{t.homeSubtitle}</p>
       </header>
 
