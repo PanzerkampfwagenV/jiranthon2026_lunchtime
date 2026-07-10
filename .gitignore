@@ -60,3 +60,8 @@ coverage/
 __pycache__/
 .pytest_cache/
 tests/e2e/_artifacts/
+
+# MCP 설정 (API 키 평문 포함 — 커밋 금지)
+.mcp.json
+.cursor/mcp.json
+.claude/settings.local.json
