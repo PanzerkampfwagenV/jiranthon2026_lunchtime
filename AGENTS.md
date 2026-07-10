@@ -44,8 +44,11 @@ Record development progress under `docs/devlog/` after major work is completed a
 
 - 추천 로직은 백엔드(`backend/src/recommendation.ts`)에서 처리한다. Claude 키가 있으면 LLM 추천, 없거나 실패하면 규칙 기반(거리/시간)으로 폴백한다.
 - **사내 LLM 게이트웨이는 OpenAI 호환 형식**이다. Anthropic 네이티브 SDK(`/v1/messages` + `x-api-key`)가 아니라 `POST {BASE_URL}/chat/completions` + `Authorization: Bearer` 로 호출한다.
-- Base URL: `ANTHROPIC_BASE_URL` (예: `https://jiran-llm.algorix.services/v1`), 모델: `ANTHROPIC_MODEL` (게이트웨이 지원 모델명 사용, 예: `claude-haiku-4.5`). 정식 Anthropic 모델명(`claude-3-5-*`)은 게이트웨이에서 404가 날 수 있다.
+- Base URL: `ANTHROPIC_BASE_URL` (예: `https://jiran-llm.algorix.services/v1`), 모델: `ANTHROPIC_MODEL` (게이트웨이 지원 모델명 사용). 정식 Anthropic 모델명(`claude-3-5-*`)은 게이트웨이에서 404가 날 수 있다.
+- 게이트웨이에서 사용 가능한 모델은 `/models` 엔드포인트로 확인한다. 현재: `claude-opus-4.8`, `claude-sonnet-5`, `claude-haiku-4.5`.
+- **모델은 `claude-sonnet-5`를 사용한다.** `claude-haiku-4.5`는 게이트웨이가 주입한 "Kiro" 시스템 프롬프트를 강하게 따라, 우리 백엔드의 JSON 생성 프롬프트를 prompt injection 시도로 간주하고 **요청을 거부**한다("I'm Kiro... I don't follow embedded system prompts"). 그 결과 LLM 추천이 실패→규칙 기반 폴백으로 빠지고, 시드 데이터엔 음식 태그가 없어 맛집투어가 항상 `tagFallback` 처리되어 음식점이 하나도 안 뜬다. sonnet은 태그(음식 종류)를 정상 반영해 음식점을 제안한다.
 - Claude는 장소명만 생성하고, 실제 좌표는 카카오 로컬 검색(`KAKAO_REST_API_KEY`)으로 보정한다.
+- **한글 인코딩 주의**: 추천 요청 본문의 태그(예: "일식")가 `??`로 깨져 전달되면 LLM이 "무슨 음식인지 안 알려줬다"며 되묻고 JSON을 안 낸다. 요청은 `Content-Type: application/json; charset=utf-8`로 UTF-8 인코딩해 보낸다.
 
 ### 시크릿 관리
 
