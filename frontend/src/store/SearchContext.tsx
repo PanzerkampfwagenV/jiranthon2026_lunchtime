@@ -36,8 +36,8 @@ export function SearchProvider({ children }: { children: ReactNode }) {
   const [location, setLocation] = useState<SelectedLocation | null>(null);
   // 기본값: 자투리 시간 3시간(180분)
   const [availableMinutes, setAvailableMinutes] = useState<number>(180);
-  // 기본값: 대중교통
-  const [mode, setMode] = useState<TravelMode>('transit');
+  // 기본값: 자동차
+  const [mode, setMode] = useState<TravelMode>('driving');
   // MBTI는 선택 사항. 기본값 없음(null).
   const [mbti, setMbti] = useState<MbtiType | null>(null);
   // 맛집투어 음식 종류는 선택 사항. 중복 선택 가능, 기본값 없음([]).
