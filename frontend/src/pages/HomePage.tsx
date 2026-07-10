@@ -303,7 +303,7 @@ export default function HomePage() {
       <nav className="hashtags" aria-label={t.searchConditionsLabel}>
         <button
           type="button"
-          className={`hashtag ${activePanel === 'location' ? 'hashtag--open' : ''} ${
+          className={`hashtag hashtag--required ${activePanel === 'location' ? 'hashtag--open' : ''} ${
             customized.location ? 'hashtag--set' : ''
           }`}
           onClick={() => togglePanel('location')}
@@ -313,7 +313,7 @@ export default function HomePage() {
         </button>
         <button
           type="button"
-          className={`hashtag ${activePanel === 'time' ? 'hashtag--open' : ''} ${
+          className={`hashtag hashtag--required ${activePanel === 'time' ? 'hashtag--open' : ''} ${
             customized.time ? 'hashtag--set' : ''
           }`}
           onClick={() => togglePanel('time')}
@@ -323,7 +323,7 @@ export default function HomePage() {
         </button>
         <button
           type="button"
-          className={`hashtag ${activePanel === 'mode' ? 'hashtag--open' : ''} ${
+          className={`hashtag hashtag--required ${activePanel === 'mode' ? 'hashtag--open' : ''} ${
             customized.mode ? 'hashtag--set' : ''
           }`}
           onClick={() => togglePanel('mode')}
@@ -462,7 +462,7 @@ export default function HomePage() {
             <input
               type="range"
               min={10}
-              max={180}
+              max={360}
               step={5}
               value={availableMinutes}
               onChange={(e) => handleChangeTime(Number(e.target.value))}

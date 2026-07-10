@@ -92,6 +92,58 @@
   transform: scale(0.96);
 }
 
+/* 필수 항목(위치·시간·이동수단): 테두리에 무지개 빛이 도는 효과 */
+.hashtag--required {
+  position: relative;
+  border-color: transparent;
+  background-clip: padding-box;
+}
+
+.hashtag--required::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  padding: 2px;
+  background: linear-gradient(
+    115deg,
+    #ff0040,
+    #ff8c00,
+    #ffee00,
+    #00d26a,
+    #00b3ff,
+    #7a5cff,
+    #ff2fd0,
+    #ff0040
+  );
+  background-size: 300% 300%;
+  animation: hashtag-rainbow 4s linear infinite;
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+@keyframes hashtag-rainbow {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 300% 50%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hashtag--required::before {
+    animation: none;
+  }
+}
+
 /* 사용자가 기본값에서 직접 변경한 해시태그 강조 */
 .hashtag--set {
   background: rgba(255, 107, 53, 0.85);
