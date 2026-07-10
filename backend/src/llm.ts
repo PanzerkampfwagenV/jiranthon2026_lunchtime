@@ -8,6 +8,8 @@ export interface LlmSuggestion {
   category: string;
   /** 추천 이유/설명 한 문장 */
   description: string;
+  /** 요청한 관심 태그(예: 음식 종류)와 실제로 일치하는지 여부 */
+  matchesTag: boolean;
 }
 
 interface LlmRecommendInput {
@@ -179,13 +181,18 @@ export async function recommendWithLlm(
   const model = process.env.ANTHROPIC_MODEL || DEFAULT_MODEL;
 
   const tripLabel = input.tripType === 'roundtrip' ? '왕복' : '편도';
-  const tagLine =
-    input.tags && input.tags.length > 0
-      ? `- 관심 태그: ${input.tags.join(', ')}`
-      : '- 관심 태그: (지정 없음)';
+  const hasTags = Boolean(input.tags && input.tags.length > 0);
   const originLine = input.originLabel
     ? `${input.originLabel} (위도 ${input.origin.lat}, 경도 ${input.origin.lng})`
     : `위도 ${input.origin.lat}, 경도 ${input.origin.lng}`;
+
+  const tagFocus = hasTags ? input.tags!.join(', ') : '';
+
+  const tagRequirement = hasTags
+    ? `1. 이 중 절반 이상은 "${tagFocus}" 종류를 즐길 수 있는 식당이나 카페 지역/거리(예: "○○동 맛집거리", "○○ 카페거리" 같은 곳도 좋고, 대표적인 식당이 있다면 그 이름도 좋습니다)로 채워 주세요. matchesTag를 true로 표시해 주세요.
+2. 나머지는 일반 명소·공원·거리로 채우고 matchesTag를 false로 표시해 주세요.`
+    : `1. 각 장소의 matchesTag는 항상 false로 표시해 주세요.
+2. (해당 없음)`;
 
   const prompt = `당신은 한국 여행지 추천 전문가입니다. 사용자가 자투리 시간에 다녀올 수 있는 장소를 추천하세요.
 
@@ -193,18 +200,19 @@ export async function recommendWithLlm(
 - 출발지: ${originLine}
 - 가용 시간: ${input.availableMinutes}분 (${tripLabel} 이동 + 체류 포함)
 - 이동 수단: ${MODE_LABEL[input.mode]}
-${tagLine}
+${hasTags ? `- 찾고 있는 음식/카페 종류: ${tagFocus}` : ''}
 
 요구사항:
-1. 출발지에서 ${MODE_LABEL[input.mode]}로 ${tripLabel} 이동과 체류가 ${input.availableMinutes}분 안에 가능한, 실제로 가까운 장소만 추천하세요.
-2. 카카오맵에서 정확히 검색되는 대표 장소명을 사용하세요. 관광지·공원·명소·거리 등 "목적지" 이름만 쓰고, 지하철 출구·화장실·주차장·특정 프랜차이즈 지점 같은 세부 시설명은 쓰지 마세요.
-3. 출발지 자체나 출발지와 정확히 같은 장소(예: 출발지가 "OO역"이면 "OO역")는 추천하지 마세요. 반드시 출발지에서 이동해서 도착하는 다른 장소여야 합니다.
-4. 서로 다른 6~10곳을 추천하고, 같은 장소를 중복하지 마세요.
-5. description은 그곳의 분위기와 순간을 그려주듯 감성적으로 작성하세요. 오감과 감정을 자극하는 표현을 담아 1~2문장으로, 잠깐의 여유가 특별하게 느껴지도록 따뜻하고 서정적인 어조로 써 주세요. 다만 실제로 존재하지 않는 정보를 지어내지는 마세요.
-6. 반드시 아래 JSON 배열 형식으로만 응답하세요. 다른 텍스트나 마크다운은 절대 포함하지 마세요.
+${tagRequirement}
+3. 출발지에서 ${MODE_LABEL[input.mode]}로 ${tripLabel} 이동과 체류가 ${input.availableMinutes}분 안에 가능한, 실제로 가까운 장소만 추천하세요.
+4. 카카오맵에서 정확히 검색되는 대표 장소명(상호명 포함)을 사용하세요. 지하철 출구·화장실·주차장 같은 세부 시설명은 쓰지 마세요.
+5. 출발지 자체나 출발지와 정확히 같은 장소(예: 출발지가 "OO역"이면 "OO역")는 추천하지 마세요. 반드시 출발지에서 이동해서 도착하는 다른 장소여야 합니다.
+6. 서로 다른 6~10곳을 추천하고, 같은 장소를 중복하지 마세요.
+7. description은 그곳의 분위기와 순간을 그려주듯 감성적으로 작성하세요. 오감과 감정을 자극하는 표현을 담아 1~2문장으로, 잠깐의 여유가 특별하게 느껴지도록 따뜻하고 서정적인 어조로 써 주세요. 다만 실제로 존재하지 않는 정보를 지어내지는 마세요.
+8. 반드시 아래 JSON 배열 형식으로만 응답하세요. 다른 텍스트나 마크다운은 절대 포함하지 마세요.
 
 [
-  { "name": "구체적 장소명", "category": "분류", "description": "감성적인 목적지 설명" }
+  { "name": "구체적 장소명", "category": "분류", "description": "감성적인 목적지 설명", "matchesTag": true }
 ]`;
 
   // 사내 게이트웨이는 OpenAI 호환 형식(/chat/completions + Bearer 인증)이다.
@@ -247,6 +255,7 @@ function parseSuggestions(text: string): LlmSuggestion[] {
   const start = text.indexOf('[');
   const end = text.lastIndexOf(']');
   if (start === -1 || end === -1 || end <= start) {
+    console.error('[debug] 원본 응답 (배열 못찾음):', text.slice(0, 800));
     throw new Error('LLM 응답에서 JSON 배열을 찾을 수 없습니다.');
   }
 
@@ -291,6 +300,7 @@ function parseSuggestions(text: string): LlmSuggestion[] {
           typeof obj.category === 'string' ? obj.category : '장소',
         description:
           typeof obj.description === 'string' ? obj.description : '',
+        matchesTag: obj.matchesTag === true,
       });
     }
   }
@@ -316,7 +326,7 @@ function salvageByRegex(text: string): LlmSuggestion[] {
     const name = m[1].trim();
     if (!name || seen.has(name)) continue;
     seen.add(name);
-    result.push({ name, category: m[2]?.trim() || '장소', description: '' });
+    result.push({ name, category: m[2]?.trim() || '장소', description: '', matchesTag: false });
   }
   return result;
 }

@@ -38,6 +38,12 @@ export interface Place {
 /** 추천 응답 */
 export interface RecommendationResponse {
   places: Place[];
+  /**
+   * 요청에 태그(예: 맛집투어 음식 종류)가 있었지만, 근처에 해당 태그와
+   * 일치하는 장소를 찾지 못해 다른 장소로 대체했는지 여부.
+   * true면 프론트에서 "근처에 추천 음식점이 없어요. 대신..." 안내를 표시한다.
+   */
+  tagFallback?: boolean;
 }
 
 /** 장소 상세 정보 응답 (GET /api/place-detail) */

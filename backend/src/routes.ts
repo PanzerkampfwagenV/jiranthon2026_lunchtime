@@ -20,13 +20,13 @@ apiRouter.post(
     // async 핸들러의 에러는 수동으로 next()에 전달해야 중앙 에러 핸들러로 간다.
     try {
       const parsed = parseRecommendationRequest(req.body);
-      const places = await recommendPlaces(parsed);
+      const { places, tagFallback } = await recommendPlaces(parsed);
 
       if (places.length === 0) {
         throw AppError.noResult('주어진 시간 내 도달 가능한 장소가 없습니다.');
       }
 
-      const body: RecommendationResponse = { places };
+      const body: RecommendationResponse = { places, tagFallback };
       res.json(body);
     } catch (err) {
       next(err);

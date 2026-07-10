@@ -13,6 +13,16 @@ interface ScoredPlace {
   score: number;
 }
 
+/** 추천 결과 + 태그 대체 여부 */
+export interface RecommendationResult {
+  places: Place[];
+  /**
+   * 요청에 태그가 있었지만 근처에 일치하는 장소가 없어 다른 장소로
+   * 대체했는지 여부. 태그 요청이 없었으면 항상 false.
+   */
+  tagFallback: boolean;
+}
+
 /**
  * 추천 진입점. 조건에 맞는 장소 목록을 계산한다.
  *
@@ -21,7 +31,9 @@ interface ScoredPlace {
  */
 export async function recommendPlaces(
   req: RecommendationRequest,
-): Promise<Place[]> {
+): Promise<RecommendationResult> {
+  const hasTags = Boolean(req.tags && req.tags.length > 0);
+
   if (isLlmAvailable()) {
     try {
       // 출발지의 행정구역명을 구해 LLM이 지역을 정확히 인지하도록 한다.
@@ -36,9 +48,13 @@ export async function recommendPlaces(
         tripType: req.tripType ?? 'roundtrip',
       });
 
-      const places = await resolveLlmPlaces(req, llmPlaces);
-      if (places.length > 0) {
-        return await refineWithOsrm(req, places);
+      const resolved = await resolveLlmPlaces(req, llmPlaces);
+      if (resolved.places.length > 0) {
+        const places = await refineWithOsrm(req, resolved.places);
+        return {
+          places,
+          tagFallback: hasTags && !resolved.hasTagMatch,
+        };
       }
       // LLM 결과를 좌표/시간 조건으로 걸러 아무것도 안 남으면 폴백.
     } catch (err) {
@@ -46,8 +62,47 @@ export async function recommendPlaces(
     }
   }
 
-  const places = recommendByRules(req);
-  return await refineWithOsrm(req, places);
+  const ruleResult = recommendByRules(req);
+  const places = await refineWithOsrm(req, ruleResult.places);
+  return {
+    places,
+    tagFallback: hasTags && !ruleResult.hasTagMatch,
+  };
+}
+
+/**
+ * 프론트에서 보낸 음식 종류 태그(한식/중식/일식/양식/샐러드/커피·카페/디저트/분식)를
+ * 카카오 카테고리 문자열(예: "음식점 > 한식", "카페")에서 찾을 수 있는 키워드로 매핑한다.
+ * 카카오는 세부 요리 종류(한식/중식 등)까지 정확히 구분해주지 않고 "음식점"처럼
+ * 상위 카테고리만 주는 경우가 많아, 요리 계열 태그는 "음식점" 자체도 매칭으로 인정한다.
+ */
+const TAG_CATEGORY_KEYWORDS: Record<string, string[]> = {
+  한식: ['한식', '음식점'],
+  중식: ['중식', '중국', '음식점'],
+  일식: ['일식', '돈까스', '일본', '음식점'],
+  양식: ['양식', '패밀리레스토랑', '스테이크', '파스타', '음식점'],
+  샐러드: ['샐러드', '음식점'],
+  '커피/카페': ['카페', '커피'],
+  디저트: ['디저트', '베이커리', '제과', '카페'],
+  분식: ['분식', '음식점'],
+};
+
+/**
+ * 카카오에서 실제로 받아온 카테고리(category_group_name/category_name)가
+ * 요청 태그와 일치하는지 판단한다. 태그 문자열이 카테고리 안에 그대로
+ * 포함되거나, 매핑 테이블의 키워드가 포함되면 일치로 본다.
+ */
+function matchesTagByCategory(
+  kakaoCategory: string,
+  tags?: string[],
+): boolean {
+  if (!tags || tags.length === 0) return false;
+  const normalized = kakaoCategory.toLowerCase();
+  return tags.some((tag) => {
+    if (normalized.includes(tag.toLowerCase())) return true;
+    const keywords = TAG_CATEGORY_KEYWORDS[tag] ?? [];
+    return keywords.some((kw) => normalized.includes(kw.toLowerCase()));
+  });
 }
 
 /**
@@ -108,14 +163,19 @@ async function refineWithOsrm(
  */
 async function resolveLlmPlaces(
   req: RecommendationRequest,
-  suggestions: { name: string; category: string; description: string }[],
-): Promise<Place[]> {
+  suggestions: {
+    name: string;
+    category: string;
+    description: string;
+    matchesTag: boolean;
+  }[],
+): Promise<{ places: Place[]; hasTagMatch: boolean }> {
   const { location, availableMinutes, mode, tripType } = req;
   const isRoundtrip = (tripType ?? 'roundtrip') === 'roundtrip';
 
   // 좌표 보정은 카카오 REST 키가 있을 때만 가능하다.
   if (!isKakaoSearchAvailable()) {
-    return [];
+    return { places: [], hasTagMatch: false };
   }
 
   const resolved = await Promise.all(
@@ -144,7 +204,7 @@ async function resolveLlmPlaces(
           return null;
         }
 
-        const place: Place = {
+        const place: Place & { matchesTag: boolean } = {
           id: `llm-${index}`,
           name: kakao.name,
           category: s.category || kakao.category,
@@ -153,7 +213,14 @@ async function resolveLlmPlaces(
           travelMinutes,
           distanceKm: Math.round(distanceKm * 10) / 10,
           description: s.description || undefined,
+          // 최종 판정은 카카오에서 실제로 받아온 카테고리만 신뢰한다.
+          // LLM이 표시한 matchesTag는 상호명만 보고 추측한 값이라 부정확한
+          // 경우가 많아(예: "한식" 태그에 카페거리를 true로 표시) 사용하지 않는다.
+          matchesTag: matchesTagByCategory(kakao.category, req.tags),
         };
+        console.error(
+          `[debug] "${kakao.name}" kakaoCategory="${kakao.category}" tags=${JSON.stringify(req.tags)} matchesTag=${place.matchesTag}`,
+        );
         return place;
       } catch (err) {
         console.error(`[recommendation] "${s.name}" 좌표 보정 실패:`, err);
@@ -162,7 +229,9 @@ async function resolveLlmPlaces(
     }),
   );
 
-  const places = resolved.filter((p): p is Place => p !== null);
+  const places = resolved.filter(
+    (p): p is Place & { matchesTag: boolean } => p !== null,
+  );
 
   // 같은 장소(좌표 근접)가 중복 추천되는 경우 제거한다.
   const seen = new Set<string>();
@@ -174,7 +243,11 @@ async function resolveLlmPlaces(
   });
 
   unique.sort((a, b) => a.travelMinutes - b.travelMinutes);
-  return unique.slice(0, MAX_RESULTS);
+  const hasTagMatch = unique.some((p) => p.matchesTag);
+  const finalPlaces = unique.slice(0, MAX_RESULTS).map(
+    ({ matchesTag, ...place }) => place,
+  );
+  return { places: finalPlaces, hasTagMatch };
 }
 
 /**
@@ -186,7 +259,9 @@ async function resolveLlmPlaces(
  *    - oneway: 편도가 availableMinutes 이내여야 한다.
  * 3. 이동시간·거리·태그 일치도로 스코어링하여 정렬한다.
  */
-export function recommendByRules(req: RecommendationRequest): Place[] {
+export function recommendByRules(
+  req: RecommendationRequest,
+): { places: Place[]; hasTagMatch: boolean } {
   const { location, availableMinutes, mode, tags, tripType } = req;
   const requestedTags = new Set(tags ?? []);
   const isRoundtrip = (tripType ?? 'roundtrip') === 'roundtrip';
@@ -232,5 +307,19 @@ export function recommendByRules(req: RecommendationRequest): Place[] {
   }
 
   scored.sort((a, b) => b.score - a.score);
-  return scored.slice(0, MAX_RESULTS).map((s) => s.place);
+  const places = scored.slice(0, MAX_RESULTS).map((s) => s.place);
+
+  // CANDIDATE_PLACES 시드 데이터는 음식 관련 태그(예: 한식/카페 등)를
+  // 거의 보유하지 않아, 태그 요청이 있어도 실질적으로 항상 매칭되지 않는다.
+  // 이 경우 tagFallback으로 표시되어 프론트에서 대체 안내를 보여준다.
+  const hasTagMatch =
+    requestedTags.size === 0
+      ? true
+      : CANDIDATE_PLACES.some(
+          (c) =>
+            places.some((p) => p.id === c.id) &&
+            c.tags.some((t) => requestedTags.has(t)),
+        );
+
+  return { places, hasTagMatch };
 }
