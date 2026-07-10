@@ -37,7 +37,7 @@ const SearchContext = createContext<SearchState | undefined>(undefined);
 
 export function SearchProvider({ children }: { children: ReactNode }) {
   const [location, setLocation] = useState<SelectedLocation | null>(null);
-  // 기본값: 자투리 시간 3시간(180분)
+  // 기본값: 틈나는 시간 3시간(180분)
   const [availableMinutes, setAvailableMinutes] = useState<number>(180);
   // 기본값: 자동차
   const [mode, setMode] = useState<TravelMode>('driving');

@@ -1,4 +1,4 @@
-// 자투리 시간 여행 추천 - 공용 타입 정의
+// 틈나는 시간 여행 추천 - 공용 타입 정의
 // docs/product-requirements.md 의 3. API 계약(Contract) 기준
 
 /** 위도/경도 좌표 */

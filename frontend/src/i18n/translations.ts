@@ -171,7 +171,7 @@ const ko: Translation = {
   leadLuckyDay: '🍀 오늘의 운을 여행에 담아밐요.',
 
   hashtagLocation: '위치',
-  hashtagTime: '자투리',
+  hashtagTime: '틈나는',
   hashtagMode: '이동수단',
   hashtagMbti: 'MBTI',
   hashtagCuisine: '맛집투어',
@@ -190,11 +190,11 @@ const ko: Translation = {
   locationHint: '설정하지 않으면 현재 위치를 사용해요.',
   currentLocation: '현재 위치',
 
-  timePanelLabel: '자투리 시간 설정',
+  timePanelLabel: '틈나는 시간 설정',
   timePresetGroupLabel: '시간 프리셋',
   minutesSuffix: '분',
   adjustTime: '직접 조절: ',
-  timeSliderLabel: '자투리 시간(분)',
+  timeSliderLabel: '틈나는 시간(분)',
   timeHint: '설정하지 않으면 3시간을 사용해요.',
 
   modePanelLabel: '이동 수단 설정',

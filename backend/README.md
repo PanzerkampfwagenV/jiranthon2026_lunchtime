@@ -1,4 +1,4 @@
-# Backend — 자투리 시간 여행 추천 API
+# Backend — 틈나는 시간 여행 추천 API
 
 Node.js + Express + TypeScript(ESM) 기반 추천 API 서버. LLM(Claude)으로 조건에 맞는 장소명을 생성하고, 카카오 로컬 검색으로 실제 좌표를 보정하며, OSRM으로 실제 도로 거리·시간을 보정한다.
 
@@ -41,7 +41,7 @@ flowchart TD
     LLM --> Kakao{Kakao 키 있음?}
     Kakao -->|Yes| Coord[카카오 로컬 검색으로 좌표 보정]
     Kakao -->|No| Seed1[시드 좌표/근사]
-    Coord --> Filter[자투리 시간 내 도달 가능 필터 + 스코어링]
+    Coord --> Filter[틈나는 시간 내 도달 가능 필터 + 스코어링]
     Seed1 --> Filter
     Check -->|No / 실패| Rule[규칙 기반 폴백: 시드 데이터 + 거리/시간]
     Rule --> Filter
@@ -58,7 +58,7 @@ flowchart TD
 
 ### `POST /api/recommendations`
 
-자투리 시간 여행 추천. 요청/응답/에러 규격은 [docs/product-requirements.md — 3. API 계약](../docs/product-requirements.md#3-api-계약-contract--병렬-작업의-기준) 기준.
+틈나는 시간 여행 추천. 요청/응답/에러 규격은 [docs/product-requirements.md — 3. API 계약](../docs/product-requirements.md#3-api-계약-contract--병렬-작업의-기준) 기준.
 
 요청 예:
 

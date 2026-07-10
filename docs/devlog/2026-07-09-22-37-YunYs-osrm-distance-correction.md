@@ -30,7 +30,7 @@ flowchart TD
 ## 변경 사항
 
 - `backend/src/osrm.ts` (신규): OSRM route API 호출 함수. `walking`→`foot`, `driving`→`car` 프로필 매핑, 4초 타임아웃, 실패 시 `null` 반환.
-- `backend/src/recommendation.ts`: `refineWithOsrm()` 추가. LLM 기반/규칙 기반 추천 양쪽 경로 모두, 최종 반환 직전에 거리를 보정하고 보정된 거리로 왕복/편도 시간을 재검증해 자투리 시간을 초과하면 제외.
+- `backend/src/recommendation.ts`: `refineWithOsrm()` 추가. LLM 기반/규칙 기반 추천 양쪽 경로 모두, 최종 반환 직전에 거리를 보정하고 보정된 거리로 왕복/편도 시간을 재검증해 틈나는 시간을 초과하면 제외.
 - `backend/.env.example`: `OSRM_BASE_URL`(선택) 문서화. 미설정 시 공개 데모 서버 사용.
 
 ## 검증

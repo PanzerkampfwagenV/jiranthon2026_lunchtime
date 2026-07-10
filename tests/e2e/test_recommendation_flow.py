@@ -1,4 +1,4 @@
-"""자투리 시간 추천 웹앱 E2E 테스트 (Playwright).
+"""틈나는 시간 추천 웹앱 E2E 테스트 (Playwright).
 
 전제:
   - 프론트엔드 dev 서버가 http://localhost:5173 에서 실행 중

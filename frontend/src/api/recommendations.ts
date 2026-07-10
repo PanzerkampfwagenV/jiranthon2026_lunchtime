@@ -48,7 +48,7 @@ export async function fetchRecommendations(
   req: RecommendationRequest,
 ): Promise<RecommendationResponse> {
   if (!API_BASE_URL) {
-    // Mock 모드: 자투리 시간 내 도달 가능한 장소만 필터링 (편도 기준)
+    // Mock 모드: 틈나는 시간 내 도달 가능한 장소만 필터링 (편도 기준)
     await new Promise((resolve) => setTimeout(resolve, 500));
     const places = MOCK_PLACES.filter(
       (p) => p.travelMinutes <= req.availableMinutes,

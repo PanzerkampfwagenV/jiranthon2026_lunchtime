@@ -13,7 +13,7 @@ import {
 
 export const apiRouter = Router();
 
-/** POST /api/recommendations — 자투리 시간 여행 추천 */
+/** POST /api/recommendations — 틈나는 시간 여행 추천 */
 apiRouter.post(
   '/recommendations',
   async (req: Request, res: Response, next: NextFunction) => {

@@ -194,7 +194,7 @@ export async function recommendWithLlm(
     : `1. 각 장소의 matchesTag는 항상 false로 표시해 주세요.
 2. (해당 없음)`;
 
-  const prompt = `당신은 한국 여행지 추천 전문가입니다. 사용자가 자투리 시간에 다녀올 수 있는 장소를 추천하세요.
+  const prompt = `당신은 한국 여행지 추천 전문가입니다. 사용자가 틈나는 시간에 다녀올 수 있는 장소를 추천하세요.
 
 조건:
 - 출발지: ${originLine}

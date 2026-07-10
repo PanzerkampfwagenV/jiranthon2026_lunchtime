@@ -116,7 +116,7 @@ function matchesTagByCategory(
  * - driving만 대상으로 한다. walking은 OSRM 공개 데모 서버의 foot 프로필이
  *   도심의 등산로·보행로를 인식하지 못해 haversine 직선거리보다 훨씬 긴
  *   차도 우회 경로를 잡는 경우가 많아(예: 실측 1.9km 구간을 4.6km로 산출),
- *   자투리 시간 필터에서 실제로 걸어갈 수 있는 장소까지 전부 걸러지는
+ *   틈나는 시간 필터에서 실제로 걸어갈 수 있는 장소까지 전부 걸러지는
  *   회귀가 있어 제외했다. transit도 OSRM이 지원하지 않아 건드리지 않는다.
  * - OSRM 호출이 실패(네트워크/타임아웃 등)하면 해당 장소는 기존 추정치를 그대로 유지한다.
  * - OSRM_BASE_URL 미설정 시에도 공개 데모 서버로 동작하므로 별도 설정 없이 사용 가능하다.
@@ -148,7 +148,7 @@ async function refineWithOsrm(
     }),
   );
 
-  // OSRM 보정 결과로 왕복/편도 시간이 자투리 시간을 초과하게 된 장소는 제외한다.
+  // OSRM 보정 결과로 왕복/편도 시간이 틈나는 시간을 초과하게 된 장소는 제외한다.
   const filtered = refined.filter((p) => {
     const required = isRoundtrip ? p.travelMinutes * 2 : p.travelMinutes;
     return required < availableMinutes;
@@ -159,7 +159,7 @@ async function refineWithOsrm(
 
 /**
  * Claude가 제안한 장소명을 카카오 검색으로 좌표 보정하고,
- * 자투리 시간 도달 가능 여부로 필터링한다.
+ * 틈나는 시간 도달 가능 여부로 필터링한다.
  */
 async function resolveLlmPlaces(
   req: RecommendationRequest,
@@ -188,7 +188,7 @@ async function resolveLlmPlaces(
 
         // LLM이 출발지 자체(또는 출발지와 사실상 같은 지점)를 추천 장소로
         // 다시 제안하는 경우가 있다(예: 출발지가 "OO역"일 때 "OO역"을 추천).
-        // 이동거리가 사실상 0이면 "자투리 시간 내 다녀올 곳"이라는 취지에
+        // 이동거리가 사실상 0이면 "틈나는 시간 내 다녀올 곳"이라는 취지에
         // 맞지 않으므로 제외한다.
         const MIN_DISTANCE_KM = 0.1;
         if (distanceKm < MIN_DISTANCE_KM) {
@@ -254,7 +254,7 @@ async function resolveLlmPlaces(
  * 규칙 기반 추천 (폴백).
  *
  * 1. 각 후보의 편도 이동시간을 추정한다.
- * 2. 자투리 시간 내 도달 가능 여부로 필터링한다.
+ * 2. 틈나는 시간 내 도달 가능 여부로 필터링한다.
  *    - roundtrip: 왕복(편도×2)이 availableMinutes 이내여야 한다.
  *    - oneway: 편도가 availableMinutes 이내여야 한다.
  * 3. 이동시간·거리·태그 일치도로 스코어링하여 정렬한다.
@@ -273,7 +273,7 @@ export function recommendByRules(
     const travelMinutes = estimateTravelMinutes(distanceKm, mode);
     const requiredMinutes = isRoundtrip ? travelMinutes * 2 : travelMinutes;
 
-    // 이동에 자투리 시간을 모두 써버리면 체류 시간이 없으므로 제외한다.
+    // 이동에 틈나는 시간을 모두 써버리면 체류 시간이 없으므로 제외한다.
     if (requiredMinutes >= availableMinutes) {
       continue;
     }

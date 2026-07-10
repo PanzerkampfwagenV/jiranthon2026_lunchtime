@@ -1,6 +1,6 @@
 # 8. 사용자 페르소나 (User Personas)
 
-> **이 문서의 역할**: "자투리 시간 여행 추천 웹앱"을 실제로 사용할 법한 대표 사용자 유형을 정의합니다. 기능 우선순위·UX 결정·카피라이팅의 기준으로 삼습니다.
+> **이 문서의 역할**: "틈나는 시간 여행 추천 웹앱"을 실제로 사용할 법한 대표 사용자 유형을 정의합니다. 기능 우선순위·UX 결정·카피라이팅의 기준으로 삼습니다.
 > **함께 보는 문서**: 제품 개요·타깃 사용자는 [../product-requirements.md](../product-requirements.md) 1.4, 차별점은 [../planning/01-overview-differentiation.md](../planning/01-overview-differentiation.md) 참고.
 
 ---
@@ -9,7 +9,7 @@
 
 ```mermaid
 mindmap
-  root((자투리 시간<br/>여행 추천))
+  root((틈나는 시간<br/>여행 추천))
     P1 지수
       기차 대기 1시간
       혼자 여행
