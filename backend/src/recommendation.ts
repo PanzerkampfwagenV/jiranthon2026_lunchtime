@@ -244,7 +244,15 @@ async function resolveLlmPlaces(
 
   unique.sort((a, b) => a.travelMinutes - b.travelMinutes);
   const hasTagMatch = unique.some((p) => p.matchesTag);
-  const finalPlaces = unique.slice(0, MAX_RESULTS).map(
+
+  // 태그(음식 종류) 요청이 있고 일치하는 음식점이 하나라도 있으면, 결과를
+  // 음식점만으로 좁혀 보여준다. 일치하는 음식점이 없으면 전체를 그대로 노출하고
+  // 상위(recommendPlaces)에서 tagFallback으로 대체 안내를 띄운다.
+  const hasTags = Boolean(req.tags && req.tags.length > 0);
+  const selected =
+    hasTags && hasTagMatch ? unique.filter((p) => p.matchesTag) : unique;
+
+  const finalPlaces = selected.slice(0, MAX_RESULTS).map(
     ({ matchesTag, ...place }) => place,
   );
   return { places: finalPlaces, hasTagMatch };
