@@ -2,8 +2,21 @@ import { useEffect, useMemo, useState } from 'react';
 import './PolaroidBackdrop.css';
 
 const TOTAL_IMAGES = 10;
-const PHOTO_COUNT = 8;
 const SWAP_INTERVAL_MS = 4500;
+
+// 화면 너비에 따라 배경 폴라로이드 장수를 결정한다.
+// FHD(1920px) 이상: 10장, 그보다 작으면 8장, 더 작으면 6장, 최소 4장.
+function photoCountForWidth(width: number): number {
+  if (width >= 1920) return 10;
+  if (width >= 1280) return 8;
+  if (width >= 768) return 6;
+  return 4;
+}
+
+function currentPhotoCount(): number {
+  if (typeof window === 'undefined') return 8;
+  return photoCountForWidth(window.innerWidth);
+}
 
 // 각 서울 이미지(seoul-01~10)에 어울리는 감성 여행 문구.
 const CAPTIONS: Record<string, string> = {
@@ -36,6 +49,8 @@ const LAYOUT_SLOTS = [
   { top: 70, left: 20, size: 188, delay: 1.5 },
   { top: 68, left: 60, size: 200, delay: 0.45 },
   { top: 38, left: 42, size: 168, delay: 1.05 },
+  { top: 24, left: 20, size: 180, delay: 0.75 },
+  { top: 22, left: 60, size: 184, delay: 1.35 },
 ];
 
 function randomRotate(): number {
@@ -63,14 +78,39 @@ interface SlotState {
   rotate: number;
 }
 
-function pickInitialSlots(): SlotState[] {
-  const chosen = shuffle(buildPool()).slice(0, PHOTO_COUNT);
+function pickSlots(count: number): SlotState[] {
+  const chosen = shuffle(buildPool()).slice(0, count);
   return chosen.map((src) => ({ src, rotate: randomRotate() }));
 }
 
 export default function PolaroidBackdrop() {
   const pool = useMemo(() => buildPool(), []);
-  const [slots, setSlots] = useState<SlotState[]>(() => pickInitialSlots());
+  const [count, setCount] = useState<number>(() => currentPhotoCount());
+  const [slots, setSlots] = useState<SlotState[]>(() => pickSlots(currentPhotoCount()));
+
+  // 화면 리사이즈 시 사진 개수를 다시 계산해 슬롯 수를 맞춘다.
+  useEffect(() => {
+    const handleResize = () => {
+      const next = currentPhotoCount();
+      setCount((prev) => (prev === next ? prev : next));
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // count 변화에 맞춰 슬롯 배열 길이를 늘리거나 줄인다.
+  useEffect(() => {
+    setSlots((prev) => {
+      if (prev.length === count) return prev;
+      if (prev.length > count) return prev.slice(0, count);
+      const currentSrcs = new Set(prev.map((s) => s.src));
+      const candidates = shuffle(pool.filter((src) => !currentSrcs.has(src)));
+      const additions = candidates
+        .slice(0, count - prev.length)
+        .map((src) => ({ src, rotate: randomRotate() }));
+      return [...prev, ...additions];
+    });
+  }, [count, pool]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
